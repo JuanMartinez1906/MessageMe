@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { disconnectSocket } from '../../services/socket';
 import Avatar from '../ui/Avatar';
 import GroupList from '../groups/GroupList';
+import ConversationList from '../direct/ConversationList';
+
+type Tab = 'groups' | 'dms';
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
+  const [tab, setTab] = useState<Tab>('groups');
 
   function handleLogout() {
     disconnectSocket();
@@ -34,9 +39,33 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Group list */}
+      {/* Tabs */}
+      <div className="flex border-b border-[#374045]">
+        <button
+          onClick={() => setTab('groups')}
+          className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            tab === 'groups'
+              ? 'text-teal-400 border-b-2 border-teal-400'
+              : 'text-[#8696a0] hover:text-[#e9edef]'
+          }`}
+        >
+          Grupos
+        </button>
+        <button
+          onClick={() => setTab('dms')}
+          className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            tab === 'dms'
+              ? 'text-teal-400 border-b-2 border-teal-400'
+              : 'text-[#8696a0] hover:text-[#e9edef]'
+          }`}
+        >
+          Directos
+        </button>
+      </div>
+
+      {/* Content */}
       <div className="flex-1 overflow-hidden">
-        <GroupList />
+        {tab === 'groups' ? <GroupList /> : <ConversationList />}
       </div>
     </aside>
   );

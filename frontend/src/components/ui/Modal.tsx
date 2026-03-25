@@ -24,8 +24,10 @@ export default function Modal({ title, onClose, children }: Props) {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[#e9edef]">{title}</h2>
-          <button onClick={onClose} className="text-[#8696a0] hover:text-[#e9edef] text-xl leading-none">
-            ✕
+          <button onClick={onClose} className="text-[#8696a0] hover:text-[#e9edef] leading-none">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
         {children}

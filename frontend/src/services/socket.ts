@@ -3,11 +3,13 @@ import { io, Socket } from 'socket.io-client';
 let socket: Socket | null = null;
 
 export function connectSocket(token: string): Socket {
-  if (socket?.connected) return socket;
+  // Return existing socket even if still connecting — don't create a second one mid-handshake
+  if (socket) return socket;
 
-  socket = io('/', {
+  socket = io('http://localhost:3000', {
     auth: { token },
     transports: ['websocket'],
+    reconnectionAttempts: 5,
   });
 
   return socket;

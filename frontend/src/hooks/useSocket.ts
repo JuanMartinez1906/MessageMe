@@ -2,17 +2,25 @@ import { useEffect } from 'react';
 import { connectSocket, disconnectSocket } from '../services/socket';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
-import { Message, MessageStatus } from '../types';
+import { Message, MessageStatus, DirectMessage, DirectMessageStatus } from '../types';
 
 export function useSocket() {
   const accessToken = useAuthStore((s) => s.accessToken);
-  const { addMessage, updateMessageStatus, setTyping, updateUserPresence } = useChatStore();
+  const {
+    addMessage,
+    updateMessageStatus,
+    setTyping,
+    updateUserPresence,
+    addDirectMessage,
+    updateDirectMessageStatus,
+  } = useChatStore();
 
   useEffect(() => {
     if (!accessToken) return;
 
     const socket = connectSocket(accessToken);
 
+    // ── Group channel events ───────────────────────────────────────────────
     socket.on('new-message', (message: Message) => {
       addMessage(message);
     });
@@ -40,6 +48,22 @@ export function useSocket() {
       updateUserPresence(userId, false);
     });
 
+    // ── Direct message events ──────────────────────────────────────────────
+    socket.on('new-direct-message', (message: DirectMessage) => {
+      addDirectMessage(message);
+    });
+
+    socket.on(
+      'direct-message-status-updated',
+      ({ messageId, status }: { messageId: string; status: DirectMessageStatus }) => {
+        updateDirectMessageStatus(messageId, status);
+      },
+    );
+
+    socket.on('connect_error', (err) => {
+      console.error('Socket connection error:', err.message);
+    });
+
     return () => {
       socket.off('new-message');
       socket.off('message-status-updated');
@@ -47,7 +71,11 @@ export function useSocket() {
       socket.off('user-stop-typing');
       socket.off('user-online');
       socket.off('user-offline');
-      disconnectSocket();
+      socket.off('new-direct-message');
+      socket.off('direct-message-status-updated');
+      socket.off('connect_error');
+      // Do NOT disconnect here — socket is kept alive for the session.
+      // Explicit disconnect happens on logout via disconnectSocket() in Sidebar.
     };
   }, [accessToken]);
 }

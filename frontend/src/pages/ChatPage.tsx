@@ -5,10 +5,11 @@ import { useChatStore } from '../store/chatStore';
 import { useSocket } from '../hooks/useSocket';
 import Sidebar from '../components/layout/Sidebar';
 import ChatWindow from '../components/layout/ChatWindow';
-import { Group } from '../types';
+import DmChatWindow from '../components/direct/DmChatWindow';
+import { Group, DirectConversation } from '../types';
 
 export default function ChatPage() {
-  const setGroups = useChatStore((s) => s.setGroups);
+  const { setGroups, setConversations, activeConversation } = useChatStore();
   useSocket();
 
   const { data: groups } = useQuery<Group[]>({
@@ -19,14 +20,26 @@ export default function ChatPage() {
     },
   });
 
+  const { data: conversations } = useQuery<DirectConversation[]>({
+    queryKey: ['conversations'],
+    queryFn: async () => {
+      const { data } = await api.get('/direct/conversations');
+      return data;
+    },
+  });
+
   useEffect(() => {
     if (groups) setGroups(groups);
   }, [groups]);
 
+  useEffect(() => {
+    if (conversations) setConversations(conversations);
+  }, [conversations]);
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <ChatWindow />
+      {activeConversation ? <DmChatWindow /> : <ChatWindow />}
     </div>
   );
 }

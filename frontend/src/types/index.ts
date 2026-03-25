@@ -66,6 +66,32 @@ export interface Message {
   statuses: MessageStatusEntry[];
 }
 
+export type DirectMessageStatus = 'SENT' | 'DELIVERED' | 'READ';
+
+export interface DirectMessage {
+  id: string;
+  content: string;
+  type: MessageType;
+  fileUrl: string | null;
+  createdAt: string;
+  editedAt: string | null;
+  status: DirectMessageStatus;
+  senderId: string;
+  conversationId: string;
+  sender: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>;
+}
+
+export interface DirectConversation {
+  id: string;
+  createdAt: string;
+  participants: {
+    id: string;
+    userId: string;
+    user: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'isOnline'>;
+  }[];
+  messages: DirectMessage[];
+}
+
 export interface UploadResponse {
   url: string;
   thumbnailUrl: string | null;

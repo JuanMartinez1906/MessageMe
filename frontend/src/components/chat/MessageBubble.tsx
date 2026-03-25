@@ -21,12 +21,25 @@ function StatusTicks({ statuses, currentUserId }: { statuses: Message['statuses'
 }
 
 function SingleTick() {
-  return <span className="text-[#8696a0] text-xs">✓</span>;
+  return (
+    <svg className="w-3.5 h-3.5 text-[#8696a0] inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  );
 }
 
 function DoubleTick({ blue, gray }: { blue?: boolean; gray?: boolean }) {
-  const color = blue ? 'text-[#53bdeb]' : gray ? 'text-[#8696a0]' : 'text-[#8696a0]';
-  return <span className={`${color} text-xs`}>✓✓</span>;
+  const color = blue ? 'text-[#53bdeb]' : 'text-[#8696a0]';
+  return (
+    <span className={`inline-flex ${color}`}>
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+      </svg>
+      <svg className="w-3.5 h-3.5 -ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+      </svg>
+    </span>
+  );
 }
 
 function formatTime(iso: string) {
@@ -67,7 +80,10 @@ export default function MessageBubble({ message, isOwn, currentUserId }: Props) 
             download
             className="flex items-center gap-2 text-teal-400 hover:text-teal-300 text-sm mb-1"
           >
-            <span>📎</span>
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
             <span className="underline">Descargar archivo</span>
           </a>
         )}

@@ -9,19 +9,30 @@ import { groupsRouter } from './modules/groups/groups.router';
 import { messagingRouter } from './modules/messaging/messaging.router';
 import { uploadRouter } from './modules/messaging/upload.router';
 import { MessagingGateway } from './modules/messaging/messaging.gateway';
+import { directRouter } from './modules/direct/direct.router';
+import { DirectGateway } from './modules/direct/direct.gateway';
+import { usersRouter } from './modules/users/users.router';
 
 const app = express();
 const httpServer = createServer(app);
 
+// In dev allow any localhost origin; in production restrict to FRONTEND_URL
+const allowedOrigin = isProduction
+  ? config.clientUrl
+  : (origin: string | undefined, cb: (e: Error | null, ok?: boolean) => void) => {
+      if (!origin || /^https?:\/\/localhost(:\d+)?$/.test(origin)) return cb(null, true);
+      cb(new Error(`CORS: ${origin} not allowed`));
+    };
+
 const corsOptions = {
-  origin: config.clientUrl,
+  origin: allowedOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 
 const io = new Server(httpServer, {
-  cors: { origin: config.clientUrl, methods: ['GET', 'POST'] },
+  cors: { origin: allowedOrigin, methods: ['GET', 'POST'] },
 });
 
 app.use(cors(corsOptions));
@@ -35,6 +46,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/groups', groupsRouter);
 app.use('/api/channels', messagingRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/direct', directRouter);
+app.use('/api/users', usersRouter);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', env: config.nodeEnv });
@@ -50,6 +63,7 @@ if (isProduction) {
 }
 
 new MessagingGateway(io);
+new DirectGateway(io);
 
 httpServer.listen(config.port, () => {
   console.log(`Server running on port ${config.port} [${config.nodeEnv}]`);

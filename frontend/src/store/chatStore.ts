@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Group, Channel, Message, MessageStatus } from '../types';
+import { Group, Channel, Message, MessageStatus, DirectConversation, DirectMessage, DirectMessageStatus } from '../types';
 
 interface TypingUser {
   userId: string;
@@ -7,14 +7,22 @@ interface TypingUser {
 }
 
 interface ChatState {
+  // Groups / channels
   groups: Group[];
   activeGroup: Group | null;
   activeChannel: Channel | null;
   messages: Message[];
   typingUsers: TypingUser[];
 
+  // Direct messages
+  conversations: DirectConversation[];
+  activeConversation: DirectConversation | null;
+  directMessages: DirectMessage[];
+
+  // Groups actions
   setGroups: (groups: Group[]) => void;
   addGroup: (group: Group) => void;
+  updateGroup: (group: Group) => void;
   setActiveGroup: (group: Group | null) => void;
   setActiveChannel: (channel: Channel | null) => void;
   setMessages: (messages: Message[]) => void;
@@ -22,6 +30,14 @@ interface ChatState {
   updateMessageStatus: (messageId: string, userId: string, status: MessageStatus) => void;
   setTyping: (userId: string, channelId: string, isTyping: boolean) => void;
   updateUserPresence: (userId: string, isOnline: boolean) => void;
+
+  // DM actions
+  setConversations: (conversations: DirectConversation[]) => void;
+  addConversation: (conversation: DirectConversation) => void;
+  setActiveConversation: (conversation: DirectConversation | null) => void;
+  setDirectMessages: (messages: DirectMessage[]) => void;
+  addDirectMessage: (message: DirectMessage) => void;
+  updateDirectMessageStatus: (messageId: string, status: DirectMessageStatus) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -30,11 +46,22 @@ export const useChatStore = create<ChatState>((set) => ({
   activeChannel: null,
   messages: [],
   typingUsers: [],
+  conversations: [],
+  activeConversation: null,
+  directMessages: [],
 
-  setGroups: (groups) => set({ groups }),
+  setGroups: (groups) => set((s) => ({
+    groups,
+    activeGroup: s.activeGroup ? (groups.find((g) => g.id === s.activeGroup!.id) ?? s.activeGroup) : null,
+  })),
   addGroup: (group) => set((s) => ({ groups: [group, ...s.groups] })),
+  updateGroup: (group) => set((s) => ({
+    groups: s.groups.map((g) => (g.id === group.id ? group : g)),
+    activeGroup: s.activeGroup?.id === group.id ? group : s.activeGroup,
+  })),
 
-  setActiveGroup: (group) => set({ activeGroup: group, activeChannel: null, messages: [] }),
+  setActiveGroup: (group) =>
+    set({ activeGroup: group, activeChannel: null, messages: [], activeConversation: null, directMessages: [] }),
   setActiveChannel: (channel) => set({ activeChannel: channel, messages: [] }),
 
   setMessages: (messages) => set({ messages }),
@@ -75,5 +102,35 @@ export const useChatStore = create<ChatState>((set) => ({
           m.user.id === userId ? { ...m, user: { ...m.user, isOnline } } : m,
         ),
       })),
+      conversations: s.conversations.map((c) => ({
+        ...c,
+        participants: c.participants.map((p) =>
+          p.user.id === userId ? { ...p, user: { ...p.user, isOnline } } : p,
+        ),
+      })),
+    })),
+
+  setConversations: (conversations) => set({ conversations }),
+  addConversation: (conversation) =>
+    set((s) => {
+      if (s.conversations.some((c) => c.id === conversation.id)) return s;
+      return { conversations: [conversation, ...s.conversations] };
+    }),
+
+  setActiveConversation: (conversation) =>
+    set({ activeConversation: conversation, directMessages: [], activeGroup: null, activeChannel: null, messages: [] }),
+
+  setDirectMessages: (directMessages) => set({ directMessages }),
+  addDirectMessage: (message) =>
+    set((s) => {
+      if (s.directMessages.some((m) => m.id === message.id)) return s;
+      return { directMessages: [...s.directMessages, message] };
+    }),
+
+  updateDirectMessageStatus: (messageId, status) =>
+    set((s) => ({
+      directMessages: s.directMessages.map((m) =>
+        m.id === messageId ? { ...m, status } : m,
+      ),
     })),
 }));
