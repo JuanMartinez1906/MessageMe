@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package messageme.message;
+
+option go_package = "github.com/messageme/proto/message";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+service MessageService {
+  // Persist a new message. Called by api-gateway / ws-gateway.
+  // After save, message-service produces Kafka event `messages.sent`.
+  rpc SendMessage(SendMessageRequest) returns (Message);
+
+  rpc GetMessage(GetMessageRequest) returns (Message);
+
+  // Cursor-paginated history.
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+
+  // Server-streaming variant used by ws-gateway to prefetch recent history
+  // when a user joins a channel.
+  rpc StreamHistory(GetHistoryRequest) returns (stream Message);
+
+  rpc EditMessage(EditMessageRequest) returns (Message);
+  rpc DeleteMessage(DeleteMessageRequest) returns (messageme.common.Empty);
+}
+
+// Scope: a message belongs to EITHER a channel OR a conversation (not both).
+message Message {
+  string message_id = 1;
+  string sender_id = 2;
+  messageme.common.MessageType type = 3;
+  string content = 4;
+  string file_url = 5;
+
+  // Exactly one of the two is populated.
+  string channel_id = 6;
+  string conversation_id = 7;
+
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp edited_at = 9;
+}
+
+message SendMessageRequest {
+  string sender_id = 1;
+  messageme.common.MessageType type = 2;
+  string content = 3;
+  string file_url = 4;
+
+  // Exactly one.
+  string channel_id = 5;
+  string conversation_id = 6;
+
+  // Idempotency key to dedupe resends from ws-gateway reconnects.
+  string client_message_id = 7;
+}
+
+message GetMessageRequest {
+  string message_id = 1;
+}
+
+message GetHistoryRequest {
+  // Exactly one.
+  string channel_id = 1;
+  string conversation_id = 2;
+
+  messageme.common.Page page = 3;
+}
+
+message GetHistoryResponse {
+  repeated Message messages = 1;
+  messageme.common.PageInfo page_info = 2;
+}
+
+message EditMessageRequest {
+  string message_id = 1;
+  string sender_id = 2;
+  string new_content = 3;
+}
+
+message DeleteMessageRequest {
+  string message_id = 1;
+  string sender_id = 2;
+}

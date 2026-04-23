@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package messageme.user;
+
+option go_package = "github.com/messageme/proto/user";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+service UserService {
+  // Create a profile after auth-service has validated + hashed the password.
+  // Called synchronously from auth-service.Register via gRPC.
+  rpc CreateProfile(CreateProfileRequest) returns (UserProfile);
+
+  rpc GetProfile(GetProfileRequest) returns (UserProfile);
+  rpc GetProfiles(GetProfilesRequest) returns (GetProfilesResponse);
+  rpc Search(SearchRequest) returns (SearchResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UserProfile);
+}
+
+message UserProfile {
+  string user_id = 1;
+  string email = 2;
+  string username = 3;
+  string display_name = 4;
+  string avatar_url = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message CreateProfileRequest {
+  string user_id = 1;
+  string email = 2;
+  string username = 3;
+  string display_name = 4;
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfilesRequest {
+  repeated string user_ids = 1;
+}
+
+message GetProfilesResponse {
+  repeated UserProfile profiles = 1;
+}
+
+message SearchRequest {
+  string query = 1;
+  messageme.common.Page page = 2;
+}
+
+message SearchResponse {
+  repeated UserProfile results = 1;
+  messageme.common.PageInfo page_info = 2;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  string display_name = 2;
+  string avatar_url = 3;
+}

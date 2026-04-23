@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/media.ready.schema.json",
+  "title": "MediaReady",
+  "description": "media-processor finished generating derivatives (thumbnails/transcodes). Consumed by ws-gateway (notify clients) and message-service (update file_url references if needed).",
+  "type": "object",
+  "required": ["file_id", "status", "processed_at"],
+  "additionalProperties": false,
+  "properties": {
+    "file_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["READY", "FAILED"]
+    },
+    "thumbnail_key": {
+      "type": ["string", "null"],
+      "description": "S3 key of the WebP thumbnail (null when status=FAILED or not an image)."
+    },
+    "width": { "type": ["integer", "null"] },
+    "height": { "type": ["integer", "null"] },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Error details when status=FAILED."
+    },
+    "processed_at": { "type": "string", "format": "date-time" }
+  }
+}

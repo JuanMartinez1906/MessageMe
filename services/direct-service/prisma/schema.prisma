@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1-to-1 conversations. Supports only two participants (MVP).
+// Messages themselves live in message-service (MongoDB).
+model Conversation {
+  conversationId String   @id @default(uuid()) @map("conversation_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+  lastMessageAt  DateTime @default(now()) @map("last_message_at")
+
+  participants Participant[]
+
+  @@map("conversation")
+}
+
+model Participant {
+  conversationId String @map("conversation_id") @db.Uuid
+  userId         String @map("user_id") @db.Uuid
+
+  conversation Conversation @relation(fields: [conversationId], references: [conversationId], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("participant")
+}

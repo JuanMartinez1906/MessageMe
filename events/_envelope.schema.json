@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/_envelope.schema.json",
+  "title": "EventEnvelope",
+  "description": "Common envelope wrapping every Kafka event payload in MessageMe.",
+  "type": "object",
+  "required": ["event_id", "event_type", "event_version", "occurred_at", "producer", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of this event instance (for idempotent consumers)."
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Matches the Kafka topic name (e.g. 'messages.sent')."
+    },
+    "event_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Schema version of the payload."
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when the event happened."
+    },
+    "producer": {
+      "type": "string",
+      "description": "Service name that produced this event (e.g. 'message-service')."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Optional correlation id for distributed tracing."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific payload; shape defined by the topic's own schema."
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/files.uploaded.schema.json",
+  "title": "FileUploaded",
+  "description": "Client confirmed a file upload to S3. Consumed by media-processor to generate thumbnails/transcodes.",
+  "type": "object",
+  "required": ["file_id", "owner_id", "storage_key", "mime_type", "size_bytes", "uploaded_at"],
+  "additionalProperties": false,
+  "properties": {
+    "file_id": { "type": "string" },
+    "owner_id": { "type": "string" },
+    "storage_key": { "type": "string", "description": "S3 object key." },
+    "mime_type": { "type": "string" },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "original_name": { "type": "string" },
+    "uploaded_at": { "type": "string", "format": "date-time" }
+  }
+}

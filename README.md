@@ -1,189 +1,117 @@
 # MessageMe
 
-Aplicación de mensajería en tiempo real estilo WhatsApp. Grupos, canales, mensajes con estados de entrega (✓✓), subida de archivos e indicadores de presencia online.
+Aplicación de mensajería en tiempo real estilo WhatsApp / Discord. Grupos, canales, mensajes directos, estados de entrega (✓✓), subida de archivos y presencia online.
+
+Proyecto académico ST0263 Tópicos Especiales en Telemática — implementación **distribuida en microservicios** (12 servicios MVP) que corre localmente vía Docker Compose.
 
 ## Stack
 
 | Capa | Tecnología |
 |------|-----------|
-| Backend | Node.js 20, Express, TypeScript, Socket.io |
-| Base de datos | PostgreSQL + Prisma ORM |
-| Auth | JWT (access 15min + refresh 7d) |
-| Archivos | Multer + Sharp (WebP) |
-| Frontend | React 18, Vite, Tailwind CSS, Zustand, React Query |
+| Gateway REST | Node.js + Express (`api-gateway`) |
+| Gateway WebSocket | Node.js + Socket.io (`ws-gateway`) |
+| Servicios internos | Node.js + TypeScript + gRPC |
+| Mensajería asíncrona | Apache Kafka (KRaft, sin Zookeeper) |
+| Datos relacionales | PostgreSQL (DB-per-service) |
+| Mensajes | MongoDB |
+| Estado efímero | Redis |
+| Archivos | S3 (AWS, opcional) |
+| Frontend | React 18 + Vite + Tailwind + Zustand |
 
----
+## Arquitectura
 
-## Requisitos previos
+Tres ejes de comunicación:
 
-- Node.js >= 20
-- PostgreSQL >= 14 corriendo localmente
-- npm >= 9
+- **REST (vertical, norte-sur)** — cliente ↔ `api-gateway`.
+- **gRPC (horizontal, este-oeste)** — servicio ↔ servicio, contratos en [proto/](proto/).
+- **Kafka (asíncrono)** — eventos desacoplados, schemas en [events/](events/).
 
----
+Diagrama y detalles completos en [docs/architecture.md](docs/architecture.md), endpoints REST en [docs/api-rest.md](docs/api-rest.md), flujos Kafka en [docs/events-kafka.md](docs/events-kafka.md).
 
-## Desarrollo local
+## Servicios (12 MVP)
 
-### 1. Clonar y configurar entorno
+| Servicio | Responsabilidad | Datos |
+|----------|-----------------|-------|
+| [api-gateway](services/api-gateway/) | Punto REST público, valida JWT, rutea a gRPC | — |
+| [ws-gateway](services/ws-gateway/) | Conexiones Socket.io, producer/consumer Kafka | — |
+| [auth-service](services/auth-service/) | Registro, login, refresh, `ValidateToken` | PostgreSQL |
+| [user-service](services/user-service/) | Perfiles, búsqueda | PostgreSQL |
+| [presence-service](services/presence-service/) | Online/offline, heartbeats | Redis |
+| [group-service](services/group-service/) | Grupos, miembros, roles | PostgreSQL |
+| [channel-service](services/channel-service/) | Canales dentro de grupos | PostgreSQL |
+| [direct-service](services/direct-service/) | Conversaciones 1-a-1 | PostgreSQL |
+| [message-service](services/message-service/) | Persistencia de mensajes, historial | MongoDB |
+| [delivery-service](services/delivery-service/) | Estados SENT/DELIVERED/READ | Redis + MongoDB |
+| [file-service](services/file-service/) | URLs presignadas S3 | PostgreSQL + S3 |
+| [media-processor](services/media-processor/) | Genera WebP thumbnails (Kafka consumer) | S3 |
 
-```bash
-git clone <repo-url>
-cd MessageMe
+## Cómo correr todo
 
-# Instalar todas las dependencias
-npm run install:all
-
-# Configurar variables de entorno del backend
-cp backend/.env.example backend/.env
-# Editar backend/.env con tus credenciales
-```
-
-### 2. Crear la base de datos
-
-```bash
-createdb messageme
-cd backend && npx prisma db push && cd ..
-```
-
-### 3. Levantar en desarrollo
-
-```bash
-npm run dev
-```
-
-Esto levanta backend en `http://localhost:3000` y frontend en `http://localhost:5173` simultáneamente.
-
----
-
-## Variables de entorno
-
-Archivo: `backend/.env`
-
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `PORT` | Puerto del servidor | `3000` |
-| `DATABASE_URL` | URL de conexión PostgreSQL | `postgresql://user:pass@localhost:5432/messageme` |
-| `JWT_SECRET` | Secreto para access tokens (15 min) | `cadena-aleatoria-larga` |
-| `JWT_REFRESH_SECRET` | Secreto para refresh tokens (7 días) | `otra-cadena-aleatoria` |
-| `NODE_ENV` | Entorno (`development` / `production`) | `development` |
-| `FRONTEND_URL` | Origen permitido por CORS | `http://localhost:5173` |
-| `MAX_FILE_SIZE` | Tamaño máximo de archivo en bytes | `10485760` (10 MB) |
-| `UPLOADS_DIR` | Carpeta de uploads | `./uploads` |
-
----
-
-## Endpoints principales
-
-### Auth
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/api/auth/register` | Registro con email, username, displayName, password |
-| POST | `/api/auth/login` | Login → access + refresh token |
-| POST | `/api/auth/refresh` | Renovar access token |
-| POST | `/api/auth/logout` | Marcar offline |
-| GET | `/api/auth/me` | Perfil del usuario autenticado |
-
-### Grupos y canales
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/api/groups` | Crear grupo (crea canal `general` automáticamente) |
-| GET | `/api/groups` | Mis grupos |
-| GET | `/api/groups/:id` | Detalle del grupo |
-| POST | `/api/groups/:id/members` | Agregar miembro (solo ADMIN) |
-| DELETE | `/api/groups/:id/members/:userId` | Eliminar miembro (solo ADMIN) |
-| POST | `/api/groups/:id/channels` | Crear canal (solo ADMIN) |
-| GET | `/api/groups/:id/channels` | Canales del grupo |
-| DELETE | `/api/groups/:id/channels/:channelId` | Eliminar canal (solo ADMIN) |
-
-### Mensajería
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/channels/:id/messages` | Historial (cursor pagination) |
-| DELETE | `/api/channels/:id/messages/:msgId` | Eliminar mensaje |
-| POST | `/api/upload` | Subir archivo/imagen |
-
-### Socket.io — eventos del cliente
-| Evento | Payload | Descripción |
-|--------|---------|-------------|
-| `join-channel` | `{ channelId }` | Unirse a canal |
-| `leave-channel` | `{ channelId }` | Salir de canal |
-| `send-message` | `{ channelId, content, type, fileUrl?, thumbnailUrl? }` | Enviar mensaje |
-| `message-delivered` | `{ messageId }` | Marcar como entregado |
-| `message-read` | `{ messageId }` | Marcar como leído |
-| `user-typing` | `{ channelId }` | Indicador de escritura |
-| `user-stop-typing` | `{ channelId }` | Detener indicador |
-
-### Socket.io — eventos del servidor
-| Evento | Descripción |
-|--------|-------------|
-| `new-message` | Nuevo mensaje en el canal |
-| `message-status-updated` | Estado ✓✓ actualizado |
-| `user-typing` / `user-stop-typing` | Indicador de escritura |
-| `user-online` / `user-offline` | Presencia en tiempo real |
-
----
-
-## Despliegue en AWS EC2
-
-### Requisitos en la instancia
+### 1. Levantar la infra + los 12 microservicios
 
 ```bash
-# Node.js 20
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# PostgreSQL
-sudo apt-get install -y postgresql postgresql-contrib
-sudo systemctl start postgresql
-
-# PM2
-sudo npm install -g pm2
+cd infra
+cp .env.example .env
+docker compose up -d
+docker compose ps          # esperar a que todo esté "healthy"
 ```
 
-### Pasos de despliegue
+Kafka UI disponible en http://localhost:8085 para inspeccionar topics.
+
+Puertos expuestos:
+- `api-gateway` → http://localhost:8080
+- `ws-gateway` → http://localhost:8081
+- Postgres → `localhost:5432` (una DB por servicio)
+- MongoDB → `localhost:27017`
+- Redis → `localhost:6379`
+
+### 2. Correr el frontend
 
 ```bash
-# 1. Clonar repo
-git clone <repo-url> && cd MessageMe
-
-# 2. Configurar variables de entorno
-cp backend/.env.example backend/.env
-nano backend/.env   # completar con valores de producción
-
-# 3. Crear base de datos
-sudo -u postgres createdb messageme
-
-# 4. Ejecutar deploy
-chmod +x deploy.sh && ./deploy.sh
-
-# 5. Configurar PM2 para iniciar con el sistema
-pm2 startup && pm2 save
+cd frontend
+cp .env.example .env       # apunta a localhost:8080 y localhost:8081
+npm install
+npm run dev                # http://localhost:5173
 ```
 
-### Nginx (proxy inverso recomendado)
+Registra dos usuarios en ventanas privadas distintas, abre conversación directa entre ellos y prueba el envío de mensajes con ✓✓.
 
-```nginx
-server {
-    listen 80;
-    server_name tu-dominio.com;
+### 3. Pruebas automatizadas
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
+E2E completo (REST → gRPC → Kafka → WebSocket):
+
+```bash
+cd tests
+npm install
+npm run e2e                # o npm run e2e:verbose
 ```
 
-### Variables de producción clave
+Load test (k6 sobre el path REST):
 
-```env
-NODE_ENV=production
-FRONTEND_URL=https://tu-dominio.com
-DATABASE_URL=postgresql://user:password@localhost:5432/messageme
-JWT_SECRET=<cadena-aleatoria-64-chars>
-JWT_REFRESH_SECRET=<cadena-aleatoria-64-chars>
+```bash
+npm run load               # requiere k6 instalado: brew install k6
 ```
+
+Detalles en [tests/README.md](tests/README.md).
+
+## Estructura del repo
+
+```
+MessageMe/
+├── proto/          # Contratos gRPC (.proto) — 9 servicios + tipos comunes
+├── events/         # JSON schemas de eventos Kafka (envelope + 8 topics)
+├── services/       # Los 12 microservicios MVP
+├── shared/         # Librería común: logger, proto-loader, envelope Kafka, ids
+├── frontend/       # Cliente React
+├── infra/          # docker-compose, scripts de bootstrap, Dockerfile base
+├── tests/          # E2E (tsx) + load (k6)
+└── docs/           # architecture, api-rest, events-kafka
+```
+
+## Convenciones
+
+- **REST solo en `api-gateway`**, los demás servicios solo hablan gRPC.
+- **Mensajes siempre por WebSocket**; REST solo para historial paginado.
+- **DB-per-service**: ningún servicio lee tablas de otro. Cross-service se hace por gRPC o Kafka.
+- **Eventos Kafka**: nombres en pasado (`messages.sent`), particionados por el id que debe preservar orden (`conversation_id` / `channel_id`), consumers idempotentes por `event_id`.
+- **Idioma**: código y comentarios en inglés, docs en español.

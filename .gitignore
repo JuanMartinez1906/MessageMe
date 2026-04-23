@@ -1,4 +1,30 @@
 node_modules/
 .env
+.env.local
 uploads/
 dist/
+build/
+coverage/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Claude Code workspace (plans, skills, local agent config)
+.claude/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Microservices generated code (gRPC stubs, proto descriptors)
+services/*/src/generated/
+
+# Docker local data (if you ever run volumes as bind mounts)
+infra/data/
+
+# AWS deployment secrets — uploaded to the EC2 via scp, never committed
+infra/.env.production

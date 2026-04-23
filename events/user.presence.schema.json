@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/user.presence.schema.json",
+  "title": "UserPresence",
+  "description": "A user went online or offline. Topic is compacted (keyed by user_id) — only the latest state is retained. Consumed by ws-gateway to push presence updates.",
+  "type": "object",
+  "required": ["user_id", "online", "at"],
+  "additionalProperties": false,
+  "properties": {
+    "user_id": { "type": "string" },
+    "online": { "type": "boolean" },
+    "last_seen": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "at": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Groups are owned by a creator and hold members.
+// Channels belong to channel-service (separate DB); group-service only cares about group ownership/membership.
+model Group {
+  groupId     String   @id @default(uuid()) @map("group_id") @db.Uuid
+  name        String
+  description String?
+  avatarUrl   String?  @map("avatar_url")
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  members GroupMember[]
+
+  @@index([createdBy])
+  @@map("group")
+}
+
+model GroupMember {
+  groupId  String   @map("group_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  role     Role     @default(MEMBER)
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  group Group @relation(fields: [groupId], references: [groupId], onDelete: Cascade)
+
+  @@id([groupId, userId])
+  @@index([userId])
+  @@map("group_member")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}

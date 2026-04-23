@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package messageme.delivery;
+
+option go_package = "github.com/messageme/proto/delivery";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+service DeliveryService {
+  // Record that `user_id` has received `message_id` (SENT → DELIVERED).
+  rpc MarkDelivered(MarkDeliveredRequest) returns (DeliveryAck);
+
+  // Record that `user_id` has read `message_id` (DELIVERED → READ).
+  rpc MarkRead(MarkReadRequest) returns (DeliveryAck);
+
+  // Aggregate status of a message across all recipients (for group chats).
+  // Returns per-user status.
+  rpc GetStatuses(GetStatusesRequest) returns (GetStatusesResponse);
+
+  // For a user: count unread messages per channel/conversation.
+  rpc GetUnreadCounts(GetUnreadCountsRequest) returns (GetUnreadCountsResponse);
+}
+
+message MarkDeliveredRequest {
+  string message_id = 1;
+  string user_id = 2;
+}
+
+message MarkReadRequest {
+  string message_id = 1;
+  string user_id = 2;
+}
+
+message DeliveryAck {
+  bool ok = 1;
+  google.protobuf.Timestamp at = 2;
+}
+
+message UserStatus {
+  string user_id = 1;
+  messageme.common.DeliveryStatus status = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message GetStatusesRequest {
+  string message_id = 1;
+}
+
+message GetStatusesResponse {
+  string message_id = 1;
+  repeated UserStatus statuses = 2;
+}
+
+message UnreadCount {
+  string scope_id = 1; // channel_id or conversation_id
+  int32 count = 2;
+}
+
+message GetUnreadCountsRequest {
+  string user_id = 1;
+}
+
+message GetUnreadCountsResponse {
+  repeated UnreadCount channels = 1;
+  repeated UnreadCount conversations = 2;
+}

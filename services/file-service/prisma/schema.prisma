@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Metadata for every uploaded file. S3 holds the binary; this row is the
+// authoritative record of ownership, lifecycle status and the storage key.
+model File {
+  fileId       String     @id @default(uuid()) @map("file_id") @db.Uuid
+  ownerId      String     @map("owner_id") @db.Uuid
+  mimeType     String     @map("mime_type")
+  sizeBytes    BigInt     @map("size_bytes")
+  originalName String     @map("original_name")
+  storageKey   String     @unique @map("storage_key")
+  thumbnailKey String?    @map("thumbnail_key")
+  width        Int?
+  height       Int?
+  status       FileStatus @default(PENDING)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@map("file")
+}
+
+enum FileStatus {
+  PENDING   // upload URL issued, object not yet confirmed in S3
+  UPLOADED  // client confirmed, media-processor has not finished
+  READY     // processing complete (or not an image, no derivatives needed)
+  FAILED    // processing failed
+}

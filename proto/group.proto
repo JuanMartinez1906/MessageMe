@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package messageme.group;
+
+option go_package = "github.com/messageme/proto/group";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+service GroupService {
+  rpc CreateGroup(CreateGroupRequest) returns (Group);
+  rpc GetGroup(GetGroupRequest) returns (Group);
+  rpc ListGroupsForUser(ListGroupsForUserRequest) returns (ListGroupsResponse);
+  rpc UpdateGroup(UpdateGroupRequest) returns (Group);
+  rpc DeleteGroup(DeleteGroupRequest) returns (messageme.common.Empty);
+
+  rpc AddMember(AddMemberRequest) returns (GroupMember);
+  rpc RemoveMember(RemoveMemberRequest) returns (messageme.common.Empty);
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+  rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (GroupMember);
+}
+
+message Group {
+  string group_id = 1;
+  string name = 2;
+  string description = 3;
+  string avatar_url = 4;
+  string created_by = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message GroupMember {
+  string user_id = 1;
+  string group_id = 2;
+  messageme.common.Role role = 3;
+  google.protobuf.Timestamp joined_at = 4;
+}
+
+message CreateGroupRequest {
+  string name = 1;
+  string description = 2;
+  string created_by = 3;
+}
+
+message GetGroupRequest {
+  string group_id = 1;
+}
+
+message ListGroupsForUserRequest {
+  string user_id = 1;
+}
+
+message ListGroupsResponse {
+  repeated Group groups = 1;
+}
+
+message UpdateGroupRequest {
+  string group_id = 1;
+  string name = 2;
+  string description = 3;
+  string avatar_url = 4;
+}
+
+message DeleteGroupRequest {
+  string group_id = 1;
+  string requested_by = 2;
+}
+
+message AddMemberRequest {
+  string group_id = 1;
+  string user_id = 2;
+  messageme.common.Role role = 3;
+  string added_by = 4;
+}
+
+message RemoveMemberRequest {
+  string group_id = 1;
+  string user_id = 2;
+  string removed_by = 3;
+}
+
+message ListMembersRequest {
+  string group_id = 1;
+}
+
+message ListMembersResponse {
+  repeated GroupMember members = 1;
+}
+
+message UpdateMemberRoleRequest {
+  string group_id = 1;
+  string user_id = 2;
+  messageme.common.Role new_role = 3;
+  string requested_by = 4;
+}

@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package messageme.file;
+
+option go_package = "github.com/messageme/proto/file";
+
+import "google/protobuf/timestamp.proto";
+
+service FileService {
+  // Returns a pre-signed S3 PUT URL the client uses to upload directly to S3.
+  // file-service creates the DB record in PENDING state.
+  rpc CreateUpload(CreateUploadRequest) returns (CreateUploadResponse);
+
+  // Called by client after upload finishes. file-service verifies S3 object
+  // exists and emits Kafka event `files.uploaded` for media-processor.
+  rpc ConfirmUpload(ConfirmUploadRequest) returns (FileRecord);
+
+  // Returns a pre-signed GET URL so clients can download the object.
+  rpc GetDownloadUrl(GetDownloadUrlRequest) returns (GetDownloadUrlResponse);
+
+  rpc GetFile(GetFileRequest) returns (FileRecord);
+}
+
+enum FileStatus {
+  FILE_STATUS_UNSPECIFIED = 0;
+  FILE_STATUS_PENDING = 1;   // upload URL issued, not yet confirmed
+  FILE_STATUS_UPLOADED = 2;  // client confirmed, not yet processed
+  FILE_STATUS_READY = 3;     // thumbnails generated (media-processor)
+  FILE_STATUS_FAILED = 4;
+}
+
+message FileRecord {
+  string file_id = 1;
+  string owner_id = 2;
+  string mime_type = 3;
+  int64 size_bytes = 4;
+  string original_name = 5;
+  string storage_key = 6;     // S3 key
+  string thumbnail_key = 7;   // S3 key for WebP thumbnail (if image)
+  FileStatus status = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+message CreateUploadRequest {
+  string owner_id = 1;
+  string mime_type = 2;
+  int64 size_bytes = 3;
+  string original_name = 4;
+}
+
+message CreateUploadResponse {
+  string file_id = 1;
+  string upload_url = 2;       // pre-signed PUT URL
+  google.protobuf.Timestamp expires_at = 3;
+  string storage_key = 4;
+}
+
+message ConfirmUploadRequest {
+  string file_id = 1;
+  string owner_id = 2;
+}
+
+message GetDownloadUrlRequest {
+  string file_id = 1;
+  string requested_by = 2;
+}
+
+message GetDownloadUrlResponse {
+  string download_url = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+message GetFileRequest {
+  string file_id = 1;
+}

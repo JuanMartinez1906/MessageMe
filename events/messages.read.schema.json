@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/messages.read.schema.json",
+  "title": "MessageRead",
+  "description": "A recipient has read a message (the WhatsApp 'double blue check'). Consumed by ws-gateway.",
+  "type": "object",
+  "required": ["message_id", "user_id", "read_at"],
+  "additionalProperties": false,
+  "properties": {
+    "message_id": { "type": "string" },
+    "user_id": { "type": "string" },
+    "sender_id": { "type": "string" },
+    "channel_id": { "type": ["string", "null"] },
+    "conversation_id": { "type": ["string", "null"] },
+    "read_at": { "type": "string", "format": "date-time" }
+  }
+}

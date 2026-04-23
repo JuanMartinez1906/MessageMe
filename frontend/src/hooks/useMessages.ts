@@ -13,7 +13,7 @@ export function useMessages(channelId: string | null) {
   const { data } = useQuery<Message[]>({
     queryKey: ['messages', channelId],
     queryFn: async () => {
-      const { data } = await api.get(`/channels/${channelId}/messages`);
+      const { data } = await api.get(`/messages/channel/${channelId}`);
       return data;
     },
     enabled: !!channelId,

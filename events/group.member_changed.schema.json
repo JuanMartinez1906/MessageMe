@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/group.member_changed.schema.json",
+  "title": "GroupMemberChanged",
+  "description": "A member was added, removed, or their role changed in a group. Consumed by notification-service and ws-gateway (to refresh member lists in-app).",
+  "type": "object",
+  "required": ["group_id", "user_id", "action", "at"],
+  "additionalProperties": false,
+  "properties": {
+    "group_id": { "type": "string" },
+    "user_id": { "type": "string" },
+    "action": {
+      "type": "string",
+      "enum": ["ADDED", "REMOVED", "ROLE_CHANGED"]
+    },
+    "role": {
+      "type": ["string", "null"],
+      "enum": ["ADMIN", "MEMBER", null]
+    },
+    "actor_id": {
+      "type": "string",
+      "description": "User who performed the action (usually an admin)."
+    },
+    "at": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@messageme/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@grpc/grpc-js": "^1.11.1",
+    "@grpc/proto-loader": "^0.7.13",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "@grpc/grpc-js": "^1.11.1",
+    "@grpc/proto-loader": "^0.7.13",
+    "@types/node": "^20.14.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "pino": "^9.5.0",
+    "typescript": "^5.5.3"
+  }
+}

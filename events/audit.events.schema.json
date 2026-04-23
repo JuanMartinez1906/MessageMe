@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/audit.events.schema.json",
+  "title": "AuditEvent",
+  "description": "Cross-cutting audit trail. Any service may produce. Consumed by audit-service for append-only storage.",
+  "type": "object",
+  "required": ["actor_id", "action", "at"],
+  "additionalProperties": false,
+  "properties": {
+    "actor_id": { "type": "string" },
+    "action": {
+      "type": "string",
+      "description": "Dotted action name (e.g. 'group.created', 'auth.login.failed')."
+    },
+    "resource_type": {
+      "type": ["string", "null"],
+      "description": "Optional type of the target resource (e.g. 'group', 'message')."
+    },
+    "resource_id": { "type": ["string", "null"] },
+    "ip": { "type": ["string", "null"] },
+    "user_agent": { "type": ["string", "null"] },
+    "metadata": {
+      "type": ["object", "null"],
+      "description": "Free-form structured details specific to the action."
+    },
+    "at": { "type": "string", "format": "date-time" }
+  }
+}

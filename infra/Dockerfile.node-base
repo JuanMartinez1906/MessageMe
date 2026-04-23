@@ -1,0 +1,27 @@
+# Base image every Node.js microservice extends in Fase 1+.
+# Multi-stage: deps → build → runtime.
+#
+# Usage from a service Dockerfile:
+#   FROM messageme/node-base:latest AS base
+#   ... service-specific steps ...
+
+# ---------- deps ----------
+FROM node:20-alpine AS deps
+WORKDIR /app
+# Install only production-friendly tools; services add their own.
+RUN apk add --no-cache libc6-compat tini
+
+# ---------- build ----------
+FROM deps AS build
+# Services copy their package.json + sources here and run their own `npm ci && npm run build`.
+
+# ---------- runtime ----------
+FROM node:20-alpine AS runtime
+WORKDIR /app
+RUN apk add --no-cache libc6-compat tini && \
+    addgroup -S app && adduser -S app -G app
+USER app
+ENV NODE_ENV=production
+# tini handles signals so Kubernetes graceful shutdown works.
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/index.js"]

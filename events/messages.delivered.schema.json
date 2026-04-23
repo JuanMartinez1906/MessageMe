@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/messages.delivered.schema.json",
+  "title": "MessageDelivered",
+  "description": "A recipient's client has received (but not necessarily read) a message. Consumed by ws-gateway to push the single-check-mark update to the sender.",
+  "type": "object",
+  "required": ["message_id", "user_id", "delivered_at"],
+  "additionalProperties": false,
+  "properties": {
+    "message_id": { "type": "string" },
+    "user_id": {
+      "type": "string",
+      "description": "Recipient that just received the message."
+    },
+    "sender_id": { "type": "string" },
+    "channel_id": { "type": ["string", "null"] },
+    "conversation_id": { "type": ["string", "null"] },
+    "delivered_at": { "type": "string", "format": "date-time" }
+  }
+}

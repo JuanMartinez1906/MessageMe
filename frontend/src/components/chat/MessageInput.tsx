@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
-import { api } from '../../services/api';
 import { getSocket } from '../../services/socket';
-import { UploadResponse } from '../../types';
+import { uploadAttachment } from '../../services/upload';
 
 interface Props {
   channelId: string;
@@ -50,23 +49,18 @@ export default function MessageInput({ channelId }: Props) {
     if (!file) return;
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append('file', file);
-      const { data }: { data: UploadResponse } = await api.post('/upload', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const attachment = await uploadAttachment(file);
       const socket = getSocket();
       if (socket) {
         socket.emit('send-message', {
           channelId,
-          content: data.originalName,
-          type: data.type,
-          fileUrl: data.url,
-          thumbnailUrl: data.thumbnailUrl,
+          content: attachment.originalName,
+          type: attachment.type,
+          fileUrl: attachment.downloadUrl,
         });
       }
     } catch (err: any) {
-      alert(err.response?.data?.message ?? 'Error al subir archivo');
+      alert(err.response?.data?.message ?? err.message ?? 'Error al subir archivo');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package messageme.direct;
+
+option go_package = "github.com/messageme/proto/direct";
+
+import "google/protobuf/timestamp.proto";
+
+service DirectService {
+  // Returns existing conversation between two users, or creates one.
+  rpc GetOrCreateConversation(GetOrCreateRequest) returns (Conversation);
+
+  rpc GetConversation(GetConversationRequest) returns (Conversation);
+
+  rpc ListForUser(ListForUserRequest) returns (ListForUserResponse);
+}
+
+message Conversation {
+  string conversation_id = 1;
+  repeated string participant_ids = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp last_message_at = 4;
+}
+
+message GetOrCreateRequest {
+  string user_a = 1;
+  string user_b = 2;
+}
+
+message GetConversationRequest {
+  string conversation_id = 1;
+  string requested_by = 2;
+}
+
+message ListForUserRequest {
+  string user_id = 1;
+}
+
+message ListForUserResponse {
+  repeated Conversation conversations = 1;
+}

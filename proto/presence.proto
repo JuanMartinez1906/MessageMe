@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package messageme.presence;
+
+option go_package = "github.com/messageme/proto/presence";
+
+import "google/protobuf/timestamp.proto";
+
+service PresenceService {
+  // Mark user as online. Called by ws-gateway on socket connect.
+  rpc SetOnline(SetOnlineRequest) returns (PresenceAck);
+
+  // Mark user as offline. Called by ws-gateway on socket disconnect.
+  rpc SetOffline(SetOfflineRequest) returns (PresenceAck);
+
+  // Refresh TTL so presence does not expire while active.
+  rpc Heartbeat(HeartbeatRequest) returns (PresenceAck);
+
+  // Bulk lookup — called when rendering a conversation to show online dots.
+  rpc GetPresence(GetPresenceRequest) returns (GetPresenceResponse);
+
+  // Server-streaming: subscribe to presence changes for a set of user ids.
+  rpc Subscribe(SubscribeRequest) returns (stream PresenceEvent);
+}
+
+message SetOnlineRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message SetOfflineRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message HeartbeatRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message PresenceAck {
+  bool ok = 1;
+}
+
+message GetPresenceRequest {
+  repeated string user_ids = 1;
+}
+
+message PresenceEntry {
+  string user_id = 1;
+  bool online = 2;
+  google.protobuf.Timestamp last_seen = 3;
+}
+
+message GetPresenceResponse {
+  repeated PresenceEntry entries = 1;
+}
+
+message SubscribeRequest {
+  repeated string user_ids = 1;
+}
+
+message PresenceEvent {
+  string user_id = 1;
+  bool online = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}

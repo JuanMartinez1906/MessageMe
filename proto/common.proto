@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package messageme.common;
+
+option go_package = "github.com/messageme/proto/common";
+
+import "google/protobuf/timestamp.proto";
+
+message Empty {}
+
+message Page {
+  string cursor = 1;
+  int32 limit = 2;
+}
+
+message PageInfo {
+  string next_cursor = 1;
+  bool has_more = 2;
+}
+
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_TEXT = 1;
+  MESSAGE_TYPE_IMAGE = 2;
+  MESSAGE_TYPE_FILE = 3;
+  MESSAGE_TYPE_AUDIO = 4;
+}
+
+enum DeliveryStatus {
+  DELIVERY_STATUS_UNSPECIFIED = 0;
+  DELIVERY_STATUS_SENT = 1;
+  DELIVERY_STATUS_DELIVERED = 2;
+  DELIVERY_STATUS_READ = 3;
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_ADMIN = 1;
+  ROLE_MEMBER = 2;
+}
+
+message Error {
+  string code = 1;
+  string message = 2;
+}

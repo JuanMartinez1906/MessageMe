@@ -92,10 +92,3 @@ export interface DirectConversation {
   messages: DirectMessage[];
 }
 
-export interface UploadResponse {
-  url: string;
-  thumbnailUrl: string | null;
-  type: MessageType;
-  size: number;
-  originalName: string;
-}

@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Channels belong to a group. Group ownership/membership lives in group-service.
+// channel-service trusts the group_id reference (no FK across DBs).
+model Channel {
+  channelId   String   @id @default(uuid()) @map("channel_id") @db.Uuid
+  groupId     String   @map("group_id") @db.Uuid
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([groupId])
+  @@map("channel")
+}

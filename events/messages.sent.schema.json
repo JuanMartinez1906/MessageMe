@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://messageme.dev/events/messages.sent.schema.json",
+  "title": "MessageSent",
+  "description": "A new message was persisted. Consumed by ws-gateway (push to recipients), delivery-service (create SENT rows), search-service (index), notification-service (push/email).",
+  "type": "object",
+  "required": ["message_id", "sender_id", "type", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "message_id": { "type": "string" },
+    "sender_id": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["TEXT", "IMAGE", "FILE", "AUDIO"]
+    },
+    "content": { "type": "string" },
+    "file_id": { "type": ["string", "null"] },
+    "channel_id": { "type": ["string", "null"] },
+    "conversation_id": { "type": ["string", "null"] },
+    "recipient_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "All users expected to receive this message (for fan-out)."
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "oneOf": [
+    { "required": ["channel_id"], "properties": { "conversation_id": { "type": "null" } } },
+    { "required": ["conversation_id"], "properties": { "channel_id": { "type": "null" } } }
+  ]
+}

@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package messageme.channel;
+
+option go_package = "github.com/messageme/proto/channel";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+service ChannelService {
+  rpc CreateChannel(CreateChannelRequest) returns (Channel);
+  rpc GetChannel(GetChannelRequest) returns (Channel);
+  rpc ListChannels(ListChannelsRequest) returns (ListChannelsResponse);
+  rpc UpdateChannel(UpdateChannelRequest) returns (Channel);
+  rpc DeleteChannel(DeleteChannelRequest) returns (messageme.common.Empty);
+}
+
+message Channel {
+  string channel_id = 1;
+  string group_id = 2;
+  string name = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message CreateChannelRequest {
+  string group_id = 1;
+  string name = 2;
+  string description = 3;
+  string created_by = 4;
+}
+
+message GetChannelRequest {
+  string channel_id = 1;
+}
+
+message ListChannelsRequest {
+  string group_id = 1;
+}
+
+message ListChannelsResponse {
+  repeated Channel channels = 1;
+}
+
+message UpdateChannelRequest {
+  string channel_id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message DeleteChannelRequest {
+  string channel_id = 1;
+  string requested_by = 2;
+}

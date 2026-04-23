@@ -1,0 +1,618 @@
+name: messageme
+
+# Infra local para desarrollo de microservicios.
+# Levanta: PostgreSQL, MongoDB, Redis, Kafka (KRaft), Kafka UI.
+# Los servicios de aplicación (auth-service, message-service, etc) se sumarán en Fase 1+.
+#
+# Uso:
+#   cd infra && docker compose up -d
+#   docker compose logs -f kafka
+#   docker compose down       # detener
+#   docker compose down -v    # detener y borrar volúmenes
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: messageme-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: messageme
+      POSTGRES_PASSWORD: messageme
+      POSTGRES_DB: messageme
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U messageme"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    container_name: messageme-mongo
+    restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0', members:[{_id:0, host:'localhost:27017'}]}).ok }"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: messageme-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # LocalStack — S3-compatible object store for local development.
+  # Exposes the API on port 4566 so both containers (via DNS `localstack`) and
+  # host processes (via `localhost:4566`) can reach it with identical URLs.
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: messageme-localstack
+    restart: unless-stopped
+    environment:
+      SERVICES: s3
+      DEBUG: "0"
+      PERSISTENCE: "1"
+      AWS_DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/_localstack/health | grep -q '\"s3\": \"available\\|running\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  # One-shot: create the MessageMe bucket once LocalStack is healthy.
+  localstack-init:
+    image: amazon/aws-cli:2.17.0
+    container_name: messageme-localstack-init
+    depends_on:
+      localstack:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        aws --endpoint-url=http://localstack:4566 s3api create-bucket --bucket messageme-files --region us-east-1 || true
+        # CORS so the Vite dev server (http://localhost:5173) can PUT the file
+        # directly against the presigned URL without a preflight failure.
+        cat > /tmp/cors.json <<'JSON'
+        {
+          "CORSRules": [
+            {
+              "AllowedOrigins": ["*"],
+              "AllowedMethods": ["GET", "PUT", "POST", "HEAD"],
+              "AllowedHeaders": ["*"],
+              "ExposeHeaders": ["ETag"],
+              "MaxAgeSeconds": 3600
+            }
+          ]
+        }
+        JSON
+        aws --endpoint-url=http://localstack:4566 s3api put-bucket-cors --bucket messageme-files --cors-configuration file:///tmp/cors.json || true
+        echo "bucket ready"
+    restart: "no"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: messageme-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"       # for host clients
+      - "29092:29092"     # for containers on the same network
+    environment:
+      # KRaft mode (no Zookeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # KRaft cluster id — must be a 22-char base64url-encoded UUID.
+      # Generate a new one with: python3 -c "import uuid,base64; print(base64.urlsafe_b64encode(uuid.uuid4().bytes).decode().rstrip('='))"
+      CLUSTER_ID: "VmmkVzZ3Q1yoygayFfgWZg"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: messageme-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./scripts/kafka-topics.sh:/scripts/kafka-topics.sh:ro
+    entrypoint: ["/bin/bash", "/scripts/kafka-topics.sh"]
+    restart: "no"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: messageme-kafka-ui
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: messageme-dev
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      DYNAMIC_CONFIG_ENABLED: "true"
+
+  # ---- App services (Fase 1) ----
+
+  user-service-migrate:
+    build:
+      context: ..
+      dockerfile: services/user-service/Dockerfile
+      target: deps
+    container_name: messageme-user-service-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_user?schema=public
+    working_dir: /app/services/user-service
+    command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+    restart: "no"
+
+  user-service:
+    build:
+      context: ..
+      dockerfile: services/user-service/Dockerfile
+    container_name: messageme-user-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user-service-migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50052"
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_user?schema=public
+    ports:
+      - "50052:50052"
+
+  auth-service-migrate:
+    build:
+      context: ..
+      dockerfile: services/auth-service/Dockerfile
+      target: deps
+    container_name: messageme-auth-service-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_auth?schema=public
+    working_dir: /app/services/auth-service
+    command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+    restart: "no"
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: services/auth-service/Dockerfile
+    container_name: messageme-auth-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service-migrate:
+        condition: service_completed_successfully
+      user-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50051"
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_auth?schema=public
+      USER_SERVICE_ADDR: user-service:50052
+      JWT_SECRET: dev-access-secret-change-me
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-me
+      JWT_ACCESS_TTL_SECONDS: "900"
+      JWT_REFRESH_TTL_SECONDS: "604800"
+      BCRYPT_ROUNDS: "10"
+    ports:
+      - "50051:50051"
+
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: messageme-api-gateway
+    restart: unless-stopped
+    depends_on:
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      group-service:
+        condition: service_started
+      channel-service:
+        condition: service_started
+      direct-service:
+        condition: service_started
+      message-service:
+        condition: service_started
+      presence-service:
+        condition: service_started
+      delivery-service:
+        condition: service_started
+      file-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      CORS_ORIGIN: http://localhost:5173
+      AUTH_SERVICE_ADDR: auth-service:50051
+      USER_SERVICE_ADDR: user-service:50052
+      GROUP_SERVICE_ADDR: group-service:50053
+      CHANNEL_SERVICE_ADDR: channel-service:50054
+      DIRECT_SERVICE_ADDR: direct-service:50055
+      MESSAGE_SERVICE_ADDR: message-service:50056
+      PRESENCE_SERVICE_ADDR: presence-service:50057
+      DELIVERY_SERVICE_ADDR: delivery-service:50058
+      FILE_SERVICE_ADDR: file-service:50059
+    ports:
+      - "8080:8080"
+
+  # ---- App services (Fase 2) ----
+
+  group-service-migrate:
+    build:
+      context: ..
+      dockerfile: services/group-service/Dockerfile
+      target: deps
+    container_name: messageme-group-service-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_group?schema=public
+    working_dir: /app/services/group-service
+    command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+    restart: "no"
+
+  group-service:
+    build:
+      context: ..
+      dockerfile: services/group-service/Dockerfile
+    container_name: messageme-group-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      group-service-migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50053"
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_group?schema=public
+    ports:
+      - "50053:50053"
+
+  channel-service-migrate:
+    build:
+      context: ..
+      dockerfile: services/channel-service/Dockerfile
+      target: deps
+    container_name: messageme-channel-service-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_channel?schema=public
+    working_dir: /app/services/channel-service
+    command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+    restart: "no"
+
+  channel-service:
+    build:
+      context: ..
+      dockerfile: services/channel-service/Dockerfile
+    container_name: messageme-channel-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      channel-service-migrate:
+        condition: service_completed_successfully
+      group-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50054"
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_channel?schema=public
+      GROUP_SERVICE_ADDR: group-service:50053
+    ports:
+      - "50054:50054"
+
+  direct-service-migrate:
+    build:
+      context: ..
+      dockerfile: services/direct-service/Dockerfile
+      target: deps
+    container_name: messageme-direct-service-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_direct?schema=public
+    working_dir: /app/services/direct-service
+    command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+    restart: "no"
+
+  direct-service:
+    build:
+      context: ..
+      dockerfile: services/direct-service/Dockerfile
+    container_name: messageme-direct-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      direct-service-migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50055"
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_direct?schema=public
+    ports:
+      - "50055:50055"
+
+  message-service:
+    build:
+      context: ..
+      dockerfile: services/message-service/Dockerfile
+    container_name: messageme-message-service
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      group-service:
+        condition: service_started
+      channel-service:
+        condition: service_started
+      direct-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50056"
+      MONGO_URL: mongodb://mongo:27017/?directConnection=true
+      MONGO_DB: messageme_message
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: message-service
+      GROUP_SERVICE_ADDR: group-service:50053
+      CHANNEL_SERVICE_ADDR: channel-service:50054
+      DIRECT_SERVICE_ADDR: direct-service:50055
+    ports:
+      - "50056:50056"
+
+  # ---- App services (Fase 3) ----
+
+  presence-service:
+    build:
+      context: ..
+      dockerfile: services/presence-service/Dockerfile
+    container_name: messageme-presence-service
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50057"
+      REDIS_URL: redis://redis:6379
+      PRESENCE_TTL_SECONDS: "90"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: presence-service
+    ports:
+      - "50057:50057"
+
+  delivery-service:
+    build:
+      context: ..
+      dockerfile: services/delivery-service/Dockerfile
+    container_name: messageme-delivery-service
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50058"
+      REDIS_URL: redis://redis:6379
+      MONGO_URL: mongodb://mongo:27017/?directConnection=true
+      MONGO_DB: messageme_delivery
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: delivery-service
+      KAFKA_GROUP_ID: delivery-service-sent
+    ports:
+      - "50058:50058"
+
+  # ---- App services (Fase 4) ----
+
+  file-service-migrate:
+    build:
+      context: ..
+      dockerfile: services/file-service/Dockerfile
+      target: deps
+    container_name: messageme-file-service-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_file?schema=public
+    working_dir: /app/services/file-service
+    command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+    restart: "no"
+
+  file-service:
+    build:
+      context: ..
+      dockerfile: services/file-service/Dockerfile
+    container_name: messageme-file-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      file-service-migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      localstack:
+        condition: service_healthy
+      localstack-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: "50059"
+      DATABASE_URL: postgresql://messageme:messageme@postgres:5432/messageme_file?schema=public
+      S3_REGION: us-east-1
+      S3_BUCKET: messageme-files
+      S3_ENDPOINT: http://localstack:4566
+      S3_PUBLIC_ENDPOINT: http://localhost:4566
+      S3_FORCE_PATH_STYLE: "true"
+      S3_ACCESS_KEY_ID: test
+      S3_SECRET_ACCESS_KEY: test
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: file-service
+      KAFKA_GROUP_ID: file-service-media-ready
+    ports:
+      - "50059:50059"
+
+  media-processor:
+    build:
+      context: ..
+      dockerfile: services/media-processor/Dockerfile
+    container_name: messageme-media-processor
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      localstack:
+        condition: service_healthy
+      localstack-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      S3_REGION: us-east-1
+      S3_BUCKET: messageme-files
+      S3_ENDPOINT: http://localstack:4566
+      S3_FORCE_PATH_STYLE: "true"
+      S3_ACCESS_KEY_ID: test
+      S3_SECRET_ACCESS_KEY: test
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: media-processor
+      KAFKA_GROUP_ID: media-processor-files-uploaded
+
+  ws-gateway:
+    build:
+      context: ..
+      dockerfile: services/ws-gateway/Dockerfile
+    container_name: messageme-ws-gateway
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_started
+      group-service:
+        condition: service_started
+      direct-service:
+        condition: service_started
+      message-service:
+        condition: service_started
+      presence-service:
+        condition: service_started
+      delivery-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: "8081"
+      CORS_ORIGIN: http://localhost:5173
+      AUTH_SERVICE_ADDR: auth-service:50051
+      GROUP_SERVICE_ADDR: group-service:50053
+      DIRECT_SERVICE_ADDR: direct-service:50055
+      MESSAGE_SERVICE_ADDR: message-service:50056
+      PRESENCE_SERVICE_ADDR: presence-service:50057
+      DELIVERY_SERVICE_ADDR: delivery-service:50058
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: ws-gateway
+      JWT_SECRET: dev-access-secret-change-me
+    ports:
+      - "8081:8081"
+
+volumes:
+  postgres_data:
+  mongo_data:
+  redis_data:
+  kafka_data:
+  localstack_data:
