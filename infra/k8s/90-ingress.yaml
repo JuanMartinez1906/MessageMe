@@ -1,0 +1,41 @@
+# Ingress — routes external HTTP traffic into the cluster via Traefik (built
+# into k3s/k3d). With the k3d cluster created with `--port "8080:80@loadbalancer"`,
+# this ingress is reachable at http://localhost:8080/ on the host.
+#
+# Rules (longest path first — Traefik picks the most specific match):
+#   /api/*       → api-gateway:8080
+#   /socket.io/* → ws-gateway:8081
+#   /            → frontend:80
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: messageme
+  namespace: messageme
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: ws-gateway
+                port:
+                  number: 8081
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

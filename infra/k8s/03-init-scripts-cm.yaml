@@ -1,0 +1,49 @@
+# ConfigMaps wrapping the postgres init SQL and kafka topics shell script,
+# so we can mount them as files into the respective containers/jobs.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: messageme
+data:
+  init.sql: |
+    CREATE DATABASE messageme_auth;
+    CREATE DATABASE messageme_user;
+    CREATE DATABASE messageme_group;
+    CREATE DATABASE messageme_channel;
+    CREATE DATABASE messageme_direct;
+    CREATE DATABASE messageme_file;
+    CREATE DATABASE messageme_audit;
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-topics-script
+  namespace: messageme
+data:
+  topics.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    BROKER="kafka:29092"
+    create() {
+      local name="$1" partitions="$2" retention_ms="$3" cleanup_policy="${4:-delete}"
+      echo "==> Creating topic: $name"
+      kafka-topics --bootstrap-server "$BROKER" \
+        --create --if-not-exists \
+        --topic "$name" \
+        --partitions "$partitions" \
+        --replication-factor 1 \
+        --config "retention.ms=$retention_ms" \
+        --config "cleanup.policy=$cleanup_policy"
+    }
+    create "messages.sent"         6 604800000
+    create "messages.delivered"    3 259200000
+    create "messages.read"         3 259200000
+    create "files.uploaded"        3 86400000
+    create "media.ready"           3 86400000
+    create "user.presence"         3 3600000   compact
+    create "group.member_changed"  3 604800000
+    create "audit.events"          3 2592000000
+    echo "==> Topics ready:"
+    kafka-topics --bootstrap-server "$BROKER" --list

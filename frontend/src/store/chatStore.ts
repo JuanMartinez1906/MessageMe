@@ -23,6 +23,7 @@ interface ChatState {
   setGroups: (groups: Group[]) => void;
   addGroup: (group: Group) => void;
   updateGroup: (group: Group) => void;
+  removeGroup: (groupId: string) => void;
   setActiveGroup: (group: Group | null) => void;
   setActiveChannel: (channel: Channel | null) => void;
   setMessages: (messages: Message[]) => void;
@@ -59,6 +60,15 @@ export const useChatStore = create<ChatState>((set) => ({
     groups: s.groups.map((g) => (g.id === group.id ? group : g)),
     activeGroup: s.activeGroup?.id === group.id ? group : s.activeGroup,
   })),
+  removeGroup: (groupId) => set((s) => {
+    const wasActive = s.activeGroup?.id === groupId;
+    return {
+      groups: s.groups.filter((g) => g.id !== groupId),
+      activeGroup: wasActive ? null : s.activeGroup,
+      activeChannel: wasActive ? null : s.activeChannel,
+      messages: wasActive ? [] : s.messages,
+    };
+  }),
 
   setActiveGroup: (group) =>
     set({ activeGroup: group, activeChannel: null, messages: [], activeConversation: null, directMessages: [] }),
@@ -95,20 +105,30 @@ export const useChatStore = create<ChatState>((set) => ({
     })),
 
   updateUserPresence: (userId, isOnline) =>
-    set((s) => ({
-      groups: s.groups.map((g) => ({
+    set((s) => {
+      const updateGroup = (g: Group): Group => ({
         ...g,
         members: g.members.map((m) =>
           m.user.id === userId ? { ...m, user: { ...m.user, isOnline } } : m,
         ),
-      })),
-      conversations: s.conversations.map((c) => ({
+      });
+      const updateConv = (c: DirectConversation): DirectConversation => ({
         ...c,
         participants: c.participants.map((p) =>
           p.user.id === userId ? { ...p, user: { ...p.user, isOnline } } : p,
         ),
-      })),
-    })),
+      });
+      return {
+        groups: s.groups.map(updateGroup),
+        conversations: s.conversations.map(updateConv),
+        // Active selections hold their own object reference (set via
+        // setActiveGroup/setActiveConversation) — they don't share identity
+        // with the items inside `groups`/`conversations`. Without mirroring
+        // the update here, the chat header keeps the stale isOnline.
+        activeGroup: s.activeGroup ? updateGroup(s.activeGroup) : null,
+        activeConversation: s.activeConversation ? updateConv(s.activeConversation) : null,
+      };
+    }),
 
   setConversations: (conversations) => set({ conversations }),
   addConversation: (conversation) =>

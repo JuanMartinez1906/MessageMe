@@ -49,7 +49,7 @@ export default function ConversationList() {
         ) : (
           conversations.map((conv) => {
             const other = getOtherParticipant(conv, myId ?? '');
-            const lastMsg = conv.messages[0];
+            const lastMsg = conv.messages?.[0];
             const isActive = activeConversation?.id === conv.id;
 
             return (

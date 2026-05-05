@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: presence-service
+  namespace: messageme
+spec:
+  selector:
+    app: presence-service
+  ports:
+    - name: grpc
+      port: 50057
+      targetPort: 50057
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: presence-service
+  namespace: messageme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: presence-service
+  template:
+    metadata:
+      labels:
+        app: presence-service
+    spec:
+      containers:
+        - name: presence-service
+          image: messageme/presence-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50057
+          env:
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: NODE_ENV } }
+            - name: GRPC_HOST
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: GRPC_HOST } }
+            - name: GRPC_PORT
+              value: "50057"
+            - name: REDIS_URL
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: REDIS_URL } }
+            - name: PRESENCE_TTL_SECONDS
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: PRESENCE_TTL_SECONDS } }
+            - name: KAFKA_BROKERS
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: KAFKA_BROKERS } }
+            - name: KAFKA_CLIENT_ID
+              value: "presence-service"

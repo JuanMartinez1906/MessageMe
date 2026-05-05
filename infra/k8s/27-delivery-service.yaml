@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: delivery-service
+  namespace: messageme
+spec:
+  selector:
+    app: delivery-service
+  ports:
+    - name: grpc
+      port: 50058
+      targetPort: 50058
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: delivery-service
+  namespace: messageme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: delivery-service
+  template:
+    metadata:
+      labels:
+        app: delivery-service
+    spec:
+      containers:
+        - name: delivery-service
+          image: messageme/delivery-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50058
+          env:
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: NODE_ENV } }
+            - name: GRPC_HOST
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: GRPC_HOST } }
+            - name: GRPC_PORT
+              value: "50058"
+            - name: REDIS_URL
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: REDIS_URL } }
+            - name: MONGO_URL
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: MONGO_URL } }
+            - name: MONGO_DB
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: MONGO_DB_DELIVERY } }
+            - name: KAFKA_BROKERS
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: KAFKA_BROKERS } }
+            - name: KAFKA_CLIENT_ID
+              value: "delivery-service"
+            - name: KAFKA_GROUP_ID
+              value: "delivery-service-sent"
+            - name: EVENTS_DIR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: EVENTS_DIR } }

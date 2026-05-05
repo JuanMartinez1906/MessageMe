@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: direct-service-migrate
+  namespace: messageme
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: messageme/direct-service:dev
+          imagePullPolicy: IfNotPresent
+          workingDir: /app/services/direct-service
+          command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://messageme:messageme@postgres:5432/messageme_direct?schema=public"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: direct-service
+  namespace: messageme
+spec:
+  selector:
+    app: direct-service
+  ports:
+    - name: grpc
+      port: 50055
+      targetPort: 50055
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: direct-service
+  namespace: messageme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: direct-service
+  template:
+    metadata:
+      labels:
+        app: direct-service
+    spec:
+      containers:
+        - name: direct-service
+          image: messageme/direct-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50055
+          env:
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: NODE_ENV } }
+            - name: GRPC_HOST
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: GRPC_HOST } }
+            - name: GRPC_PORT
+              value: "50055"
+            - name: DATABASE_URL
+              value: "postgresql://messageme:messageme@postgres:5432/messageme_direct?schema=public"

@@ -4,6 +4,7 @@ import Avatar from '../ui/Avatar';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { getSocket } from '../../services/socket';
+import { api } from '../../services/api';
 import AddMemberModal from './AddMemberModal';
 
 interface Props {
@@ -13,13 +14,29 @@ interface Props {
 }
 
 export default function GroupItem({ group, isActive, onClick }: Props) {
-  const { activeChannel, setActiveChannel } = useChatStore();
+  const { activeChannel, setActiveChannel, removeGroup } = useChatStore();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const isExpanded = isActive;
   const onlineCount = group.members.filter((m) => m.user.isOnline).length;
   const isAdmin = group.members.find((m) => m.user.id === currentUserId)?.role === 'ADMIN';
+
+  async function handleDelete() {
+    const ok = window.confirm(
+      `¿Borrar el grupo "${group.name}"? Esto elimina sus canales y no se puede deshacer.`
+    );
+    if (!ok || deleting) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/groups/${group.id}`);
+      removeGroup(group.id);
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? 'No se pudo borrar el grupo');
+      setDeleting(false);
+    }
+  }
 
   function selectChannel(channel: Channel) {
     const socket = getSocket();
@@ -66,7 +83,7 @@ export default function GroupItem({ group, isActive, onClick }: Props) {
           )}
 
           {isAdmin && (
-            <div className="pl-6 pr-3 pb-2">
+            <div className="pl-6 pr-3 pb-2 flex flex-col gap-1">
               <button
                 onClick={() => setShowAddMember(true)}
                 className="flex items-center gap-1.5 text-[#8696a0] hover:text-teal-400 text-xs transition-colors py-1"
@@ -76,6 +93,17 @@ export default function GroupItem({ group, isActive, onClick }: Props) {
                     d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
                 Agregar miembro
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-1.5 text-[#8696a0] hover:text-red-400 disabled:opacity-50 text-xs transition-colors py-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                </svg>
+                {deleting ? 'Borrando...' : 'Borrar grupo'}
               </button>
             </div>
           )}

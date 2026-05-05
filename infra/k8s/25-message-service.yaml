@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: message-service
+  namespace: messageme
+spec:
+  selector:
+    app: message-service
+  ports:
+    - name: grpc
+      port: 50056
+      targetPort: 50056
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-service
+  namespace: messageme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: message-service
+  template:
+    metadata:
+      labels:
+        app: message-service
+    spec:
+      containers:
+        - name: message-service
+          image: messageme/message-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50056
+          env:
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: NODE_ENV } }
+            - name: GRPC_HOST
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: GRPC_HOST } }
+            - name: GRPC_PORT
+              value: "50056"
+            - name: MONGO_URL
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: MONGO_URL } }
+            - name: MONGO_DB
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: MONGO_DB_MESSAGE } }
+            - name: KAFKA_BROKERS
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: KAFKA_BROKERS } }
+            - name: KAFKA_CLIENT_ID
+              value: "message-service"
+            - name: GROUP_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: GROUP_SERVICE_ADDR } }
+            - name: CHANNEL_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: CHANNEL_SERVICE_ADDR } }
+            - name: DIRECT_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: DIRECT_SERVICE_ADDR } }

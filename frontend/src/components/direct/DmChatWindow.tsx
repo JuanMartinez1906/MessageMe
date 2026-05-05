@@ -140,7 +140,7 @@ export default function DmChatWindow() {
     if (!socket || !activeConversation) return;
     directMessages.forEach((m) => {
       if (m.senderId !== myId && m.status !== 'READ') {
-        socket.emit('direct-message-read', { messageId: m.id });
+        socket.emit('message-read', { messageId: m.id });
       }
     });
   }, [directMessages, activeConversation?.id]);
@@ -155,7 +155,7 @@ export default function DmChatWindow() {
     if (!content || !activeConversation) return;
     const socket = getSocket();
     if (!socket) return;
-    socket.emit('send-direct-message', {
+    socket.emit('send-message', {
       conversationId: activeConversation.id,
       content,
       type: 'TEXT',
@@ -178,7 +178,7 @@ export default function DmChatWindow() {
       const attachment = await uploadAttachment(file);
       const socket = getSocket();
       if (socket) {
-        socket.emit('send-direct-message', {
+        socket.emit('send-message', {
           conversationId: activeConversation.id,
           content: attachment.originalName,
           type: attachment.type,

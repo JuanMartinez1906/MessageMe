@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { direct, message, user } from '../grpc-clients';
+import { direct, message, user, delivery } from '../grpc-clients';
 import { requireAuth } from '../middleware';
 import { AppError } from '@messageme/shared';
 
@@ -16,13 +16,47 @@ function typeFromProto(t: string): string {
   return (t ?? 'MESSAGE_TYPE_TEXT').replace(/^MESSAGE_TYPE_/, '');
 }
 
+function statusFromProto(s: string | undefined): 'SENT' | 'DELIVERED' | 'READ' {
+  const stripped = (s ?? 'DELIVERY_STATUS_SENT').replace(/^DELIVERY_STATUS_/, '');
+  return stripped === 'DELIVERED' || stripped === 'READ' ? stripped : 'SENT';
+}
+
 async function profileLookup(userIds: string[]) {
   if (userIds.length === 0) return new Map<string, any>();
   const res = await user.getProfiles({ userIds });
   return new Map<string, any>(res.profiles.map((p: any) => [p.userId, p]));
 }
 
-function toMessageDto(m: any, senderProfile?: any) {
+// DM history needs the recipient's status so the sender's ✓✓ persists across
+// refreshes. We fetch one delivery row per message (no bulk RPC yet); errors
+// degrade to "no status" rather than failing the whole fetch.
+async function statusesLookup(messageIds: string[]): Promise<Map<string, any[]>> {
+  if (messageIds.length === 0) return new Map();
+  const results = await Promise.all(
+    messageIds.map((id) =>
+      delivery.getStatuses({ messageId: id }).catch(() => ({ statuses: [] as any[] }))
+    )
+  );
+  return new Map(messageIds.map((id, i) => [id, (results[i] as any).statuses ?? []]));
+}
+
+function toMessageDto(
+  m: any,
+  myUserId: string,
+  senderProfile?: any,
+  statuses: any[] = []
+) {
+  // For a 1-on-1 DM, the only status that matters to the sender is the OTHER
+  // party's. If we're the sender, surface the recipient's status; otherwise
+  // default to READ (we wouldn't be loading a message we hadn't seen).
+  const isOwn = m.senderId === myUserId;
+  let status: 'SENT' | 'DELIVERED' | 'READ' = 'SENT';
+  if (isOwn) {
+    const other = statuses.find((s: any) => s.userId !== myUserId);
+    if (other) status = statusFromProto(other.status);
+  } else {
+    status = 'READ';
+  }
   return {
     id: m.messageId,
     content: m.content ?? '',
@@ -30,6 +64,7 @@ function toMessageDto(m: any, senderProfile?: any) {
     fileUrl: m.fileUrl || null,
     createdAt: tsToIso(m.createdAt),
     editedAt: m.editedAt ? tsToIso(m.editedAt) : null,
+    status,
     senderId: m.senderId,
     conversationId: m.conversationId || null,
     channelId: m.channelId || null,
@@ -62,6 +97,7 @@ conversationsRouter.post('/conversations', async (req, res, next) => {
         const p = profiles.get(uid);
         return {
           id: uid,
+          userId: uid,
           user: p
             ? {
                 id: p.userId,
@@ -94,6 +130,7 @@ conversationsRouter.get('/conversations', async (req, res, next) => {
           const p = profiles.get(uid);
           return {
             id: uid,
+            userId: uid,
             user: p
               ? {
                   id: p.userId,
@@ -122,8 +159,17 @@ conversationsRouter.get('/conversations/:id/messages', async (req, res, next) =>
       page: { cursor, limit: '50' },
     });
     const senderIds = Array.from(new Set<string>(res1.messages.map((m: any) => m.senderId)));
-    const profiles = await profileLookup(senderIds);
-    res.json(res1.messages.map((m: any) => toMessageDto(m, profiles.get(m.senderId))));
+    const messageIds = res1.messages.map((m: any) => m.messageId);
+    const [profiles, statusesMap] = await Promise.all([
+      profileLookup(senderIds),
+      statusesLookup(messageIds),
+    ]);
+    const myUserId = req.userId!;
+    res.json(
+      res1.messages.map((m: any) =>
+        toMessageDto(m, myUserId, profiles.get(m.senderId), statusesMap.get(m.messageId))
+      )
+    );
   } catch (err) {
     next(err);
   }

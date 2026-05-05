@@ -1,0 +1,55 @@
+# Shared non-secret configuration for MessageMe services.
+# Each microservice consumes a subset via envFrom or env.valueFrom.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: messageme-config
+  namespace: messageme
+data:
+  # Shared
+  NODE_ENV: "production"
+  GRPC_HOST: "0.0.0.0"
+
+  # JWT
+  JWT_ACCESS_TTL_SECONDS: "900"
+  JWT_REFRESH_TTL_SECONDS: "604800"
+  BCRYPT_ROUNDS: "10"
+
+  # gRPC service addresses (in-cluster DNS — short names resolve in same namespace)
+  AUTH_SERVICE_ADDR: "auth-service:50051"
+  USER_SERVICE_ADDR: "user-service:50052"
+  GROUP_SERVICE_ADDR: "group-service:50053"
+  CHANNEL_SERVICE_ADDR: "channel-service:50054"
+  DIRECT_SERVICE_ADDR: "direct-service:50055"
+  MESSAGE_SERVICE_ADDR: "message-service:50056"
+  PRESENCE_SERVICE_ADDR: "presence-service:50057"
+  DELIVERY_SERVICE_ADDR: "delivery-service:50058"
+  FILE_SERVICE_ADDR: "file-service:50059"
+
+  # Data plane
+  KAFKA_BROKERS: "kafka:29092"
+  REDIS_URL: "redis://redis:6379"
+  MONGO_URL: "mongodb://mongo:27017/?directConnection=true"
+  MONGO_DB_MESSAGE: "messageme_message"
+  MONGO_DB_DELIVERY: "messageme_delivery"
+
+  # S3 (LocalStack inside cluster)
+  S3_REGION: "us-east-1"
+  S3_BUCKET: "messageme-files"
+  S3_ENDPOINT: "http://localstack:4566"
+  S3_PUBLIC_ENDPOINT: "http://localhost:4566"
+  S3_FORCE_PATH_STYLE: "true"
+  S3_ACCESS_KEY_ID: "test"
+  S3_SECRET_ACCESS_KEY: "test"
+
+  # Presence
+  PRESENCE_TTL_SECONDS: "90"
+
+  # Gateways
+  CORS_ORIGIN: "*"
+
+  # Events directory for Kafka envelope validation. The Dockerfile copies the
+  # events/ folder to /app/events; without this env var the shared lib looks
+  # for them inside node_modules/@messageme/events which doesn't exist.
+  EVENTS_DIR: "/app/events"

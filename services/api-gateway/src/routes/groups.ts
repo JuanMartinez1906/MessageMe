@@ -69,6 +69,15 @@ groupsRouter.post('/', async (req, res, next) => {
     const { name, description } = req.body;
     if (!name) throw new AppError('BAD_REQUEST', 'name is required');
     const g = await group.createGroup({ name, description: description ?? '', createdBy: req.userId });
+    // Seed a default `general` channel so the group is immediately chat-ready.
+    // Without this the UI lands on an empty state with no channel selected and
+    // no way to create one (channel creation is admin-only and has no UI yet).
+    await channel.createChannel({
+      groupId: g.groupId,
+      name: 'general',
+      description: '',
+      createdBy: req.userId,
+    });
     res.status(201).json(await expandGroup(g.groupId));
   } catch (err) {
     next(err);
@@ -80,6 +89,27 @@ groupsRouter.get('/', async (req, res, next) => {
     const list = await group.listGroupsForUser({ userId: req.userId });
     const expanded = await Promise.all(list.groups.map((g: any) => expandGroup(g.groupId)));
     res.json(expanded);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Delete a group (admin only — enforced by group-service). Channels live in a
+// separate service/DB so we cascade them manually before tearing down the group:
+// once the group is gone, channel-service can't validate admin membership for
+// per-channel deletes.
+groupsRouter.delete('/:groupId', async (req, res, next) => {
+  try {
+    const channels = await channel.listChannels({ groupId: req.params.groupId });
+    await Promise.all(
+      (channels.channels ?? []).map((c: any) =>
+        channel
+          .deleteChannel({ channelId: c.channelId, requestedBy: req.userId })
+          .catch(() => undefined)
+      )
+    );
+    await group.deleteGroup({ groupId: req.params.groupId, requestedBy: req.userId });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

@@ -487,6 +487,7 @@ services:
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: delivery-service
       KAFKA_GROUP_ID: delivery-service-sent
+      EVENTS_DIR: /app/events
     ports:
       - "50058:50058"
 
@@ -541,6 +542,7 @@ services:
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: file-service
       KAFKA_GROUP_ID: file-service-media-ready
+      EVENTS_DIR: /app/events
     ports:
       - "50059:50059"
 
@@ -570,6 +572,7 @@ services:
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: media-processor
       KAFKA_GROUP_ID: media-processor-files-uploaded
+      EVENTS_DIR: /app/events
 
   ws-gateway:
     build:
@@ -606,6 +609,7 @@ services:
       DELIVERY_SERVICE_ADDR: delivery-service:50058
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: ws-gateway
+      EVENTS_DIR: /app/events
       JWT_SECRET: dev-access-secret-change-me
     ports:
       - "8081:8081"

@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ws-gateway
+  namespace: messageme
+spec:
+  selector:
+    app: ws-gateway
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-gateway
+  namespace: messageme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ws-gateway
+  template:
+    metadata:
+      labels:
+        app: ws-gateway
+    spec:
+      containers:
+        - name: ws-gateway
+          image: messageme/ws-gateway:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          env:
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: NODE_ENV } }
+            - name: PORT
+              value: "8081"
+            - name: CORS_ORIGIN
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: CORS_ORIGIN } }
+            - name: AUTH_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: AUTH_SERVICE_ADDR } }
+            - name: GROUP_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: GROUP_SERVICE_ADDR } }
+            - name: DIRECT_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: DIRECT_SERVICE_ADDR } }
+            - name: MESSAGE_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: MESSAGE_SERVICE_ADDR } }
+            - name: PRESENCE_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: PRESENCE_SERVICE_ADDR } }
+            - name: DELIVERY_SERVICE_ADDR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: DELIVERY_SERVICE_ADDR } }
+            - name: KAFKA_BROKERS
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: KAFKA_BROKERS } }
+            - name: KAFKA_CLIENT_ID
+              value: "ws-gateway"
+            - name: EVENTS_DIR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: EVENTS_DIR } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: messageme-secrets, key: JWT_SECRET } }
+          readinessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10

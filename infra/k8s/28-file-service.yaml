@@ -1,0 +1,85 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: file-service-migrate
+  namespace: messageme
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: messageme/file-service:dev
+          imagePullPolicy: IfNotPresent
+          workingDir: /app/services/file-service
+          command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://messageme:messageme@postgres:5432/messageme_file?schema=public"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: file-service
+  namespace: messageme
+spec:
+  selector:
+    app: file-service
+  ports:
+    - name: grpc
+      port: 50059
+      targetPort: 50059
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-service
+  namespace: messageme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: file-service
+  template:
+    metadata:
+      labels:
+        app: file-service
+    spec:
+      containers:
+        - name: file-service
+          image: messageme/file-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50059
+          env:
+            - name: NODE_ENV
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: NODE_ENV } }
+            - name: GRPC_HOST
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: GRPC_HOST } }
+            - name: GRPC_PORT
+              value: "50059"
+            - name: DATABASE_URL
+              value: "postgresql://messageme:messageme@postgres:5432/messageme_file?schema=public"
+            - name: S3_REGION
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: S3_REGION } }
+            - name: S3_BUCKET
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: S3_BUCKET } }
+            - name: S3_ENDPOINT
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: S3_ENDPOINT } }
+            - name: S3_PUBLIC_ENDPOINT
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: S3_PUBLIC_ENDPOINT } }
+            - name: S3_FORCE_PATH_STYLE
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: S3_FORCE_PATH_STYLE } }
+            - name: S3_ACCESS_KEY_ID
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: S3_ACCESS_KEY_ID } }
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: S3_SECRET_ACCESS_KEY } }
+            - name: KAFKA_BROKERS
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: KAFKA_BROKERS } }
+            - name: KAFKA_CLIENT_ID
+              value: "file-service"
+            - name: KAFKA_GROUP_ID
+              value: "file-service-media-ready"
+            - name: EVENTS_DIR
+              valueFrom: { configMapKeyRef: { name: messageme-config, key: EVENTS_DIR } }

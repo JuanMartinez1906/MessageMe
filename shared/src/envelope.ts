@@ -1,7 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
-import Ajv, { ValidateFunction } from 'ajv';
+// Use the 2020 build of Ajv so it recognises the
+// `https://json-schema.org/draft/2020-12/schema` meta-schema declared at the
+// top of every payload + envelope schema. The default Ajv export only knows
+// drafts up to 07 and silently fails to compile our schemas.
+import Ajv2020, { ValidateFunction } from 'ajv/dist/2020';
 import addFormats from 'ajv-formats';
 
 const DEFAULT_EVENTS_DIR = path.resolve(__dirname, '../../events');
@@ -37,7 +41,7 @@ export function buildEnvelope<P>(args: BuildEnvelopeArgs<P>): EventEnvelope<P> {
   return env;
 }
 
-const ajv = new Ajv({ strict: false, allErrors: false });
+const ajv = new Ajv2020({ strict: false, allErrors: false });
 addFormats(ajv);
 
 const validators = new Map<string, { env: ValidateFunction; payload: ValidateFunction }>();

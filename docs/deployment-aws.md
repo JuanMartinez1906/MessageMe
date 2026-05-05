@@ -53,21 +53,31 @@ Una sola instancia EC2 sirve todo (app + datos). La ASG la reemplaza si muere (s
 
 ---
 
-## 2. Bajar la llave SSH (vockey) al computador
+## 2. Crear la llave SSH
 
-AWS Academy te da una llave ya creada llamada `vockey`.
+AWS Academy en algunas versiones trae una llave pre-creada llamada `vockey`; en otras no. La forma más segura es crear la tuya.
 
-1. En el Learner Lab, click en **AWS Details** → **SSH Key** → **Show** → **Download PEM**.
-2. Guarda el archivo en `~/Downloads/labsuser.pem` (o el nombre que descargue).
-3. En la terminal de tu Mac:
-   ```bash
-   mv ~/Downloads/labsuser.pem ~/.ssh/messageme-key.pem
-   chmod 400 ~/.ssh/messageme-key.pem
-   ssh-add --apple-use-keychain ~/.ssh/messageme-key.pem    # macOS Sonoma+
-   # si falla, prueba: ssh-add ~/.ssh/messageme-key.pem
-   ```
+**Opción A — Crearla desde el formulario de Launch Instance** (más simple, se hace cuando llegues al paso 5):
+- Cuando la guía diga "Key pair (login)", en vez de seleccionar una del dropdown, click en **Create new key pair** (botón al lado del dropdown).
+- Name: `messageme-key`, Type: `RSA`, Format: `.pem`.
+- AWS descarga automáticamente `messageme-key.pem` a tu Mac.
 
-> Esta llave caduca cada vez que reinicies el lab. Si vuelves mañana, **vuelves a bajar** la misma opción (tendrá el mismo nombre `vockey` pero contenido nuevo). Esto afecta el SSH, **no** afecta que las EC2 sigan corriendo.
+**Opción B — Crearla antes desde el menú de EC2** (si quieres tenerla lista):
+1. EC2 → **Key Pairs** (menú izquierdo, sección "Network & Security") → **Create key pair**.
+2. Name: `messageme-key`, Type: `RSA`, Format: `.pem`.
+3. Click **Create** → descarga el .pem.
+
+**Dejar la llave lista en el Mac** (sea cual sea la opción):
+```bash
+mv ~/Downloads/messageme-key.pem ~/.ssh/
+chmod 400 ~/.ssh/messageme-key.pem
+ssh-add --apple-use-keychain ~/.ssh/messageme-key.pem    # macOS Sonoma+
+# si falla, prueba: ssh-add ~/.ssh/messageme-key.pem
+```
+
+> **Guárdala bien**: una vez descargada no se puede volver a obtener — AWS no guarda la clave privada. Si la pierdes toca crear otra y re-crear las instancias.
+>
+> La misma llave se usa para el bastion, la golden EC2 y el Launch Template. No crees múltiples.
 
 ---
 
@@ -161,7 +171,7 @@ Necesitas 3 reglas de firewall (security groups):
 | Name | `i-BastionHost` |
 | AMI | **Ubuntu Server 22.04 LTS (HVM), SSD Volume Type** (free tier eligible) |
 | Instance type | `t2.micro` |
-| Key pair (login) | `vockey` (la que Academy te da) |
+| Key pair (login) | `messageme-key` (la que creaste) |
 | **Network settings → Edit** | |
 | VPC | `MessageMe-vpc` |
 | Subnet | `MessageMe-subnet-public1-us-east-1a` |
@@ -204,7 +214,7 @@ ssh -A ubuntu@<bastion-public-ip>
 | Name | `i-App-base` |
 | AMI | Ubuntu Server 22.04 LTS |
 | Instance type | **t3.medium** (2 vCPU, 4 GB RAM — lo mínimo para docker-compose entero). Si Academy no lo permite, intenta `t3.small` pero vas a tener OOM en Kafka. |
-| Key pair | `vockey` |
+| Key pair | `messageme-key` |
 | **Network settings → Edit** | |
 | VPC | `MessageMe-vpc` |
 | Subnet | `MessageMe-subnet-private1-us-east-1a` |
@@ -452,7 +462,7 @@ Si todos los comandos funcionan, **la golden está lista**. Sal con `exit` dos v
 | **Launch template contents** | |
 | AMI | **My AMIs → Owned by me → `ami-MessageMe`** |
 | Instance type | `t3.medium` |
-| Key pair (login) | `vockey` |
+| Key pair (login) | `messageme-key` |
 | **Network settings** | |
 | Subnet | **Don't include in launch template** (la ASG elige) |
 | Security groups | Select existing security group → `SG-App` |

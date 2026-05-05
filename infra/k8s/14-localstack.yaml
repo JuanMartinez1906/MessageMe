@@ -1,0 +1,95 @@
+# LocalStack — S3 emulation. Stateless for our needs (we recreate the bucket
+# on each boot via the init Job below).
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: localstack
+  namespace: messageme
+spec:
+  selector:
+    app: localstack
+  ports:
+    - name: s3
+      port: 4566
+      targetPort: 4566
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localstack
+  namespace: messageme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: localstack
+  template:
+    metadata:
+      labels:
+        app: localstack
+    spec:
+      containers:
+        - name: localstack
+          image: localstack/localstack:3.8
+          ports:
+            - containerPort: 4566
+          env:
+            - name: SERVICES
+              value: "s3"
+            - name: DEBUG
+              value: "0"
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+          readinessProbe:
+            httpGet:
+              path: /_localstack/health
+              port: 4566
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+# One-shot Job: creates the messageme-files S3 bucket + sets CORS once
+# LocalStack is healthy.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: localstack-init
+  namespace: messageme
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: localstack-init
+          image: amazon/aws-cli:2.17.0
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: "test"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "test"
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for localstack..."
+              until aws --endpoint-url=http://localstack:4566 s3 ls; do sleep 2; done
+              aws --endpoint-url=http://localstack:4566 s3api create-bucket --bucket messageme-files || true
+              cat > /tmp/cors.json <<'JSON'
+              {
+                "CORSRules": [
+                  {
+                    "AllowedOrigins": ["*"],
+                    "AllowedMethods": ["GET", "PUT", "POST", "HEAD"],
+                    "AllowedHeaders": ["*"],
+                    "ExposeHeaders": ["ETag"],
+                    "MaxAgeSeconds": 3600
+                  }
+                ]
+              }
+              JSON
+              aws --endpoint-url=http://localstack:4566 s3api put-bucket-cors --bucket messageme-files --cors-configuration file:///tmp/cors.json || true
+              echo "Bucket ready."

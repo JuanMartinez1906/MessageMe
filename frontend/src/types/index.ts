@@ -89,6 +89,9 @@ export interface DirectConversation {
     userId: string;
     user: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'isOnline'>;
   }[];
-  messages: DirectMessage[];
+  // Optional in the microservices world — direct-service returns the
+  // conversation without messages; message history is fetched separately
+  // via message-service (REST + WS).
+  messages?: DirectMessage[];
 }
 
