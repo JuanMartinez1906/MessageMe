@@ -1,8 +1,11 @@
-# Ingress — routes external HTTP traffic into the cluster via Traefik (built
-# into k3s/k3d). With the k3d cluster created with `--port "8080:80@loadbalancer"`,
-# this ingress is reachable at http://localhost:8080/ on the host.
+# Ingress — routes external HTTP traffic into the cluster. Works with any
+# IngressController that honours `ingressClassName: nginx`. On Docker Desktop
+# kubeadm: instalá ingress-nginx con
+#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.3/deploy/static/provider/cloud/deploy.yaml
+# y queda accesible en http://localhost/ (el controller expone un Service
+# LoadBalancer que Docker Desktop mapea al host).
 #
-# Rules (longest path first — Traefik picks the most specific match):
+# Rules (longest path first — nginx-ingress picks the most specific match):
 #   /api/*       → api-gateway:8080
 #   /socket.io/* → ws-gateway:8081
 #   /            → frontend:80
@@ -12,9 +15,8 @@ kind: Ingress
 metadata:
   name: messageme
   namespace: messageme
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
+  ingressClassName: nginx
   rules:
     - http:
         paths:
