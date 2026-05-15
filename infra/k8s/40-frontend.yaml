@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: messageme/frontend:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/frontend:dev
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

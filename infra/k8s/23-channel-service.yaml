@@ -10,7 +10,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: messageme/channel-service:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/channel-service:dev
           imagePullPolicy: IfNotPresent
           workingDir: /app/services/channel-service
           command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: channel-service
-          image: messageme/channel-service:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/channel-service:dev
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 50054

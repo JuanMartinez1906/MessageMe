@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: ws-gateway
-          image: messageme/ws-gateway:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/ws-gateway:dev
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8081

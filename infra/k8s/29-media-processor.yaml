@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: media-processor
-          image: messageme/media-processor:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/media-processor:dev
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV

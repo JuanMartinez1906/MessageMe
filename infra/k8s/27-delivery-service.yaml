@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: delivery-service
-          image: messageme/delivery-service:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/delivery-service:dev
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 50058

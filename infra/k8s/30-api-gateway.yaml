@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: messageme/api-gateway:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/api-gateway:dev
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

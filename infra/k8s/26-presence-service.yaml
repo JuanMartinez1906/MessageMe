@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: presence-service
-          image: messageme/presence-service:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/presence-service:dev
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 50057

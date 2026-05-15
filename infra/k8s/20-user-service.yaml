@@ -10,7 +10,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: messageme/user-service:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/user-service:dev
           imagePullPolicy: IfNotPresent
           workingDir: /app/services/user-service
           command: ["npx", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"]
@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: messageme/user-service:dev
+          image: 978714898304.dkr.ecr.us-east-1.amazonaws.com/messageme/user-service:dev
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 50052
