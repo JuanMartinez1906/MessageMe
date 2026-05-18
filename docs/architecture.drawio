@@ -1,386 +1,243 @@
 <mxfile host="app.diagrams.net" agent="MessageMe" version="24.0.0">
   <diagram name="Arquitectura lógica" id="arch">
-    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+    <mxGraphModel dx="2200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1400" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
         <!-- Title -->
-        <mxCell id="title" value="MessageMe — Arquitectura lógica" style="text;html=1;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="400" y="20" width="600" height="40" as="geometry" />
+        <mxCell id="title" value="MessageMe — Arquitectura lógica" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="20" width="600" height="40" as="geometry" />
         </mxCell>
 
         <!-- ============ Client ============ -->
         <mxCell id="client" value="Cliente (browser)&#10;React 18 + Vite + Tailwind + Zustand" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="560" y="80" width="280" height="60" as="geometry" />
+          <mxGeometry x="960" y="80" width="280" height="60" as="geometry" />
         </mxCell>
 
         <!-- ============ Edge gateways ============ -->
         <mxCell id="apigw" value="api-gateway&#10;(REST público :8080)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="380" y="200" width="180" height="60" as="geometry" />
+          <mxGeometry x="780" y="200" width="180" height="60" as="geometry" />
         </mxCell>
         <mxCell id="wsgw" value="ws-gateway&#10;(WebSocket público :8081)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="840" y="200" width="180" height="60" as="geometry" />
+          <mxGeometry x="1240" y="200" width="180" height="60" as="geometry" />
         </mxCell>
 
         <!-- ============ Microservices container ============ -->
-        <mxCell id="services-bg" value="12 microservicios — gRPC interno (este-oeste)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fafafa;strokeColor=#999999;verticalAlign=top;fontSize=12;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="60" y="300" width="1280" height="280" as="geometry" />
+        <mxCell id="services-bg" value="12 microservicios — gRPC interno (este-oeste)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;verticalAlign=top;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="340" width="1640" height="260" as="geometry" />
         </mxCell>
 
-        <!-- Identity row -->
-        <mxCell id="auth" value="auth-service&#10;register / login / JWT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="100" y="340" width="160" height="50" as="geometry" />
+        <!-- Row 1: auth, user, group, channel, direct, presence -->
+        <mxCell id="auth" value="auth-service&#10;register / login / JWT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="380" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="user" value="user-service&#10;perfiles, búsqueda" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="280" y="340" width="160" height="50" as="geometry" />
+        <mxCell id="user" value="user-service&#10;perfiles, búsqueda" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="380" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="presence" value="presence-service&#10;online / heartbeat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="460" y="340" width="160" height="50" as="geometry" />
+        <mxCell id="group" value="group-service&#10;grupos + miembros + roles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="380" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="identity-label" value="IDENTIDAD" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="100" y="320" width="100" height="20" as="geometry" />
+        <mxCell id="channel" value="channel-service&#10;canales en grupos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="380" width="160" height="60" as="geometry" />
         </mxCell>
-
-        <!-- Scope row -->
-        <mxCell id="group" value="group-service&#10;grupos + miembros + roles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="100" y="430" width="160" height="50" as="geometry" />
+        <mxCell id="direct" value="direct-service&#10;DMs 1-a-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="380" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="channel" value="channel-service&#10;canales en grupos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="280" y="430" width="160" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="direct" value="direct-service&#10;DMs 1-a-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="460" y="430" width="160" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="scope-label" value="SCOPE / RELACIONES" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="100" y="410" width="160" height="20" as="geometry" />
+        <mxCell id="presence" value="presence-service&#10;online / heartbeat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="380" width="160" height="60" as="geometry" />
         </mxCell>
 
-        <!-- Content row -->
-        <mxCell id="message" value="message-service&#10;persistencia de mensajes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="700" y="340" width="160" height="50" as="geometry" />
+        <!-- Row 2: message, delivery, file, media-processor -->
+        <mxCell id="message" value="message-service&#10;persistencia de mensajes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="490" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="delivery" value="delivery-service&#10;SENT / DELIVERED / READ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="880" y="340" width="160" height="50" as="geometry" />
+        <mxCell id="delivery" value="delivery-service&#10;SENT / DELIVERED / READ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="490" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="file" value="file-service&#10;URLs presignadas S3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="700" y="430" width="160" height="50" as="geometry" />
+        <mxCell id="file" value="file-service&#10;URLs presignadas S3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="490" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="mediaproc" value="media-processor&#10;thumbnails WebP (worker)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="880" y="430" width="160" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="content-label" value="CONTENIDO" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="700" y="320" width="100" height="20" as="geometry" />
+        <mxCell id="media" value="media-processor&#10;thumbnails WebP (worker)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="490" width="160" height="60" as="geometry" />
         </mxCell>
 
-        <!-- ============ Kafka bus ============ -->
-        <mxCell id="kafka" value="Kafka (KRaft, sin ZooKeeper) — bus de eventos&#10;Topics: messages.sent · messages.delivered · messages.read · user.presence · files.uploaded · media.ready · group.member_changed · audit.events" style="shape=mxgraph.flowchart.collate;whiteSpace=wrap;html=1;fillColor=#ffd966;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="100" y="620" width="1200" height="80" as="geometry" />
+        <!-- ============ Kafka (columna derecha) ============ -->
+        <mxCell id="kafka" value="Kafka (broker · KRaft)&#10;&#10;Topics:&#10;• messages.sent&#10;• messages.delivered&#10;• messages.read&#10;• files.uploaded&#10;• media.ready&#10;• user.presence (compacted)&#10;• group.member_changed&#10;• audit.events" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="1740" y="340" width="280" height="260" as="geometry" />
         </mxCell>
 
-        <!-- ============ Data stores ============ -->
+        <!-- ============ Data stores (abajo) ============ -->
         <mxCell id="postgres" value="PostgreSQL&#10;7 DBs (1 por servicio)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="100" y="760" width="160" height="80" as="geometry" />
+          <mxGeometry x="200" y="720" width="180" height="100" as="geometry" />
         </mxCell>
         <mxCell id="mongo" value="MongoDB&#10;messages · delivery" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="320" y="760" width="160" height="80" as="geometry" />
+          <mxGeometry x="500" y="720" width="180" height="100" as="geometry" />
         </mxCell>
         <mxCell id="redis" value="Redis&#10;presencia + unread counters" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="540" y="760" width="160" height="80" as="geometry" />
+          <mxGeometry x="800" y="720" width="180" height="100" as="geometry" />
         </mxCell>
         <mxCell id="s3" value="S3 (LocalStack/AWS)&#10;archivos + thumbnails" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="760" y="760" width="180" height="80" as="geometry" />
+          <mxGeometry x="1100" y="720" width="180" height="100" as="geometry" />
         </mxCell>
 
         <!-- ============ Legend ============ -->
-        <mxCell id="legend-box" value="Leyenda" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="760" width="340" height="180" as="geometry" />
+        <mxCell id="legend" value="Leyenda" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;verticalAlign=top;fontSize=12;fontStyle=1;align=left;spacingLeft=10;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="720" width="520" height="180" as="geometry" />
         </mxCell>
-        <mxCell id="legend-rest" value="— REST (vertical, norte-sur, solo api-gateway)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="1010" y="785" width="320" height="20" as="geometry" />
+        <mxCell id="leg1" value="—— REST (vertical, norte-sur, solo api-gateway)" style="text;html=1;align=left;fontSize=11;fontColor=#1F4E79;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="750" width="480" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="legend-ws" value="— WebSocket (cliente ↔ ws-gateway, full duplex)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="1010" y="805" width="320" height="20" as="geometry" />
+        <mxCell id="leg2" value="—— WebSocket (cliente ↔ ws-gateway, full duplex)" style="text;html=1;align=left;fontSize=11;fontColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="775" width="480" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="legend-grpc" value="— gRPC (horizontal, este-oeste, microservicios)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
-          <mxGeometry x="1010" y="825" width="320" height="20" as="geometry" />
+        <mxCell id="leg3" value="—— gRPC (horizontal, este-oeste, microservicios)" style="text;html=1;align=left;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="800" width="480" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="legend-kafka" value="- - Kafka publish (asíncrono, desacoplado)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="1010" y="845" width="320" height="20" as="geometry" />
+        <mxCell id="leg4" value="- - - Kafka publish (asíncrono, productor → broker)" style="text;html=1;align=left;fontSize=11;fontColor=#D79B00;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="825" width="480" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="legend-consume" value="· · · Kafka consume" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="1010" y="865" width="320" height="20" as="geometry" />
+        <mxCell id="leg5" value="· · · · Kafka consume (broker → suscriptor)" style="text;html=1;align=left;fontSize=11;fontColor=#D79B00;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="850" width="480" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="legend-db" value="── Acceso a DB (síncrono)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
-          <mxGeometry x="1010" y="885" width="320" height="20" as="geometry" />
-        </mxCell>
-
-        <!-- ============ Edges: Client to gateways ============ -->
-        <mxCell id="e-client-apigw" value="REST (HTTPS)" style="endArrow=classic;html=1;rounded=0;strokeColor=#6c8ebf;fontSize=10;fontColor=#6c8ebf;strokeWidth=2;" edge="1" parent="1" source="client" target="apigw">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-client-wsgw" value="WebSocket" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#82b366;fontSize=10;fontColor=#82b366;strokeWidth=2;" edge="1" parent="1" source="client" target="wsgw">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="leg6" value="—— Persistencia (servicio → base de datos)" style="text;html=1;align=left;fontSize=11;fontColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="875" width="480" height="20" as="geometry" />
         </mxCell>
 
-        <!-- ============ Edges: api-gateway to services (gRPC) ============ -->
-        <mxCell id="e-apigw-auth" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="auth">
+        <!-- ============ EDGES: Cliente ↔ gateways ============ -->
+        <mxCell id="e-cli-api" value="REST (HTTPS)" style="endArrow=classic;html=1;strokeColor=#1F4E79;strokeWidth=2;fontColor=#1F4E79;fontSize=10;" edge="1" parent="1" source="client" target="apigw">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-apigw-user" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="user">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-apigw-group" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="group">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-apigw-channel" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="channel">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-apigw-direct" value="gRPC" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="apigw" target="direct">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-apigw-message" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="message">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-apigw-delivery" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="delivery">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-apigw-file" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="file">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-apigw-presence" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="apigw" target="presence">
+        <mxCell id="e-cli-ws" value="WebSocket" style="endArrow=classic;startArrow=classic;html=1;strokeColor=#2E7D32;strokeWidth=2;fontColor=#2E7D32;fontSize=10;" edge="1" parent="1" source="client" target="wsgw">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- ============ Edges: ws-gateway to services (gRPC) ============ -->
-        <mxCell id="e-wsgw-auth" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;dashed=0;" edge="1" parent="1" source="wsgw" target="auth">
+        <!-- ============ EDGES: api-gateway → microservicios (gRPC) ============ -->
+        <mxCell id="e-api-auth" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="auth">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-wsgw-presence" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="wsgw" target="presence">
+        <mxCell id="e-api-user" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="user">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-wsgw-message" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1" source="wsgw" target="message">
+        <mxCell id="e-api-group" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="group">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-wsgw-delivery" value="gRPC" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="wsgw" target="delivery">
+        <mxCell id="e-api-channel" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="channel">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- ============ Edges: services to Kafka (publish) ============ -->
-        <mxCell id="e-msg-kafka" value="messages.sent" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=5 5;strokeColor=#d79b00;fontSize=10;fontColor=#d79b00;strokeWidth=2;" edge="1" parent="1" source="message" target="kafka">
+        <mxCell id="e-api-direct" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="direct">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-delivery-kafka" value="messages.delivered/read" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=5 5;strokeColor=#d79b00;fontSize=10;fontColor=#d79b00;strokeWidth=2;" edge="1" parent="1" source="delivery" target="kafka">
+        <mxCell id="e-api-presence" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="presence">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-presence-kafka" value="user.presence" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=5 5;strokeColor=#d79b00;fontSize=10;fontColor=#d79b00;strokeWidth=2;" edge="1" parent="1" source="presence" target="kafka">
+        <mxCell id="e-api-message" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="message">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-file-kafka" value="files.uploaded" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=5 5;strokeColor=#d79b00;fontSize=10;fontColor=#d79b00;strokeWidth=2;" edge="1" parent="1" source="file" target="kafka">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-mediaproc-kafka" value="media.ready" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=5 5;strokeColor=#d79b00;fontSize=10;fontColor=#d79b00;strokeWidth=2;" edge="1" parent="1" source="mediaproc" target="kafka">
+        <mxCell id="e-api-file" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="apigw" target="file">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- ============ Edges: Kafka to consumers (subscribe) ============ -->
-        <mxCell id="e-kafka-delivery" value="consume messages.sent" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=1 3;strokeColor=#9673a6;fontSize=10;fontColor=#9673a6;strokeWidth=2;" edge="1" parent="1" source="kafka" target="delivery">
+        <!-- ============ EDGES: ws-gateway → microservicios (gRPC) ============ -->
+        <mxCell id="e-ws-auth" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;dashed=0;" edge="1" parent="1" source="wsgw" target="auth">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-kafka-mediaproc" value="consume files.uploaded" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=1 3;strokeColor=#9673a6;fontSize=10;fontColor=#9673a6;strokeWidth=2;" edge="1" parent="1" source="kafka" target="mediaproc">
+        <mxCell id="e-ws-presence" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="wsgw" target="presence">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-kafka-wsgw" value="consume all (fan-out)" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=1 3;strokeColor=#9673a6;fontSize=10;fontColor=#9673a6;strokeWidth=2;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="kafka" target="wsgw">
+        <mxCell id="e-ws-message" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="wsgw" target="message">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- ============ Edges: services to data stores ============ -->
-        <mxCell id="e-auth-pg" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="auth" target="postgres">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-user-pg" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="user" target="postgres">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-group-pg" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="group" target="postgres">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-channel-pg" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="channel" target="postgres">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-direct-pg" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="direct" target="postgres">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-file-pg" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="file" target="postgres">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-message-mongo" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="message" target="mongo">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-delivery-mongo" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="delivery" target="mongo">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-presence-redis" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;" edge="1" parent="1" source="presence" target="redis">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-delivery-redis" value="unread counters" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="delivery" target="redis">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-file-s3" value="presigned URLs" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="file" target="s3">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-mediaproc-s3" value="get original / put thumb" style="endArrow=classic;html=1;rounded=0;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="mediaproc" target="s3">
+        <mxCell id="e-ws-delivery" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="wsgw" target="delivery">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-      </root>
-    </mxGraphModel>
-  </diagram>
-
-  <diagram name="Despliegue AWS (EKS)" id="deploy">
-    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
-      <root>
-        <mxCell id="0" />
-        <mxCell id="1" parent="0" />
-
-        <!-- Title -->
-        <mxCell id="d-title" value="MessageMe — Despliegue en AWS Academy (EKS)" style="text;html=1;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="350" y="20" width="700" height="40" as="geometry" />
-        </mxCell>
-
-        <!-- Internet -->
-        <mxCell id="d-internet" value="🌐 Internet (usuarios)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="600" y="80" width="200" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- DNS -->
-        <mxCell id="d-dns" value="Route 53 / DNS público AWS&#10;xxx.elb.us-east-1.amazonaws.com" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="540" y="180" width="320" height="50" as="geometry" />
-        </mxCell>
-
-        <!-- AWS Account container -->
-        <mxCell id="d-awsacct" value="AWS Account 978714898304 — region us-east-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#ff8c00;verticalAlign=top;fontSize=13;fontStyle=1;dashed=0;" vertex="1" parent="1">
-          <mxGeometry x="60" y="270" width="1280" height="700" as="geometry" />
-        </mxCell>
-
-        <!-- ECR (outside VPC) -->
-        <mxCell id="d-ecr" value="Amazon ECR (privado)&#10;13 repos: messageme/&lt;svc&gt;:dev&#10;imágenes ARM64" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="1090" y="320" width="220" height="80" as="geometry" />
-        </mxCell>
-
-        <!-- VPC -->
-        <mxCell id="d-vpc" value="VPC propia &quot;messageme-vpc&quot; — 10.0.0.0/16" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#666666;verticalAlign=top;fontSize=12;fontStyle=1;dashed=1;" vertex="1" parent="1">
-          <mxGeometry x="100" y="320" width="960" height="620" as="geometry" />
-        </mxCell>
-
-        <!-- IGW -->
-        <mxCell id="d-igw" value="Internet Gateway&#10;messageme-igw" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="430" y="350" width="180" height="40" as="geometry" />
-        </mxCell>
-
-        <!-- Route Table -->
-        <mxCell id="d-rt" value="Route Table&#10;0.0.0.0/0 → IGW" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="640" y="350" width="180" height="40" as="geometry" />
-        </mxCell>
-
-        <!-- NLB -->
-        <mxCell id="d-nlb" value="Network Load Balancer (NLB)&#10;creado por nginx-ingress controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="430" y="420" width="390" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- Subnet A -->
-        <mxCell id="d-subnetA" value="Subnet pública us-east-1a — 10.0.1.0/24" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#82b366;verticalAlign=top;fontSize=11;fontStyle=2;dashed=0;" vertex="1" parent="1">
-          <mxGeometry x="140" y="520" width="420" height="380" as="geometry" />
-        </mxCell>
-
-        <!-- Subnet B -->
-        <mxCell id="d-subnetB" value="Subnet pública us-east-1b — 10.0.2.0/24" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#82b366;verticalAlign=top;fontSize=11;fontStyle=2;dashed=0;" vertex="1" parent="1">
-          <mxGeometry x="600" y="520" width="420" height="380" as="geometry" />
-        </mxCell>
-
-        <!-- Worker A -->
-        <mxCell id="d-nodeA" value="EC2 t4g.large (ARM Graviton)&#10;ip-10-0-1-xx · AL2_ARM_64&#10;containerd + kubelet" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="160" y="560" width="380" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- Pods on Worker A -->
-        <mxCell id="d-podsA" value="Pods: api-gateway · ws-gateway · auth · user · presence · group · channel · direct · message · delivery · file · media-processor · frontend · postgres · mongo · redis · kafka · localstack · ingress-nginx-controller&#10;&#10;~20 pods distribuidos entre los 2 nodos (scheduler decide)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=10;align=left;" vertex="1" parent="1">
-          <mxGeometry x="160" y="640" width="380" height="120" as="geometry" />
-        </mxCell>
-
-        <!-- EBS A -->
-        <mxCell id="d-ebsA" value="Volúmenes EBS (gp3) — provisionados por EBS CSI Driver&#10;data-postgres-0 · data-mongo-0 · data-redis-0 · data-kafka-0" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="160" y="790" width="380" height="80" as="geometry" />
-        </mxCell>
-
-        <!-- Worker B -->
-        <mxCell id="d-nodeB" value="EC2 t4g.large (ARM Graviton)&#10;ip-10-0-2-xx · AL2_ARM_64&#10;containerd + kubelet" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="620" y="560" width="380" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- Pods on Worker B (mirror) -->
-        <mxCell id="d-podsB" value="(K8s scheduler distribuye pods entre los 2 nodos automáticamente)&#10;&#10;Failover: si un nodo cae, los pods se re-programan en el otro" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=10;align=left;" vertex="1" parent="1">
-          <mxGeometry x="620" y="640" width="380" height="120" as="geometry" />
-        </mxCell>
-
-        <!-- EKS Control plane (above subnets, managed by AWS) -->
-        <mxCell id="d-cp" value="EKS Control Plane (managed por AWS)&#10;API Server · etcd · scheduler · controller-manager&#10;Multi-AZ replicado · K8s 1.30" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="1090" y="440" width="220" height="100" as="geometry" />
-        </mxCell>
-
-        <!-- LabRole / IAM -->
-        <mxCell id="d-iam" value="IAM: LabRole (Academy)&#10;permisos EKS · EC2 · EBS · ECR · ELB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="1090" y="570" width="220" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- Mac (developer) -->
-        <mxCell id="d-mac" value="💻 Mac del developer&#10;kubectl + aws CLI&#10;docker (solo para push a ECR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="1090" y="660" width="220" height="70" as="geometry" />
-        </mxCell>
-
-        <!-- ============ Edges ============ -->
-        <mxCell id="d-e-internet-dns" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="d-internet" target="d-dns">
+        <!-- ============ EDGES: gRPC entre microservicios ============ -->
+        <mxCell id="e-group-channel" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="group" target="channel">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-dns-nlb" value="resolve" style="endArrow=classic;html=1;rounded=0;fontSize=10;" edge="1" parent="1" source="d-dns" target="d-nlb">
+        <mxCell id="e-msg-channel" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="message" target="channel">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-igw-rt" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="d-igw" target="d-rt">
+        <mxCell id="e-msg-direct" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=1;" edge="1" parent="1" source="message" target="direct">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-nlb-nodeA" value="health check + traffic" style="endArrow=classic;html=1;rounded=0;fontSize=10;" edge="1" parent="1" source="d-nlb" target="d-nodeA">
+
+        <!-- ============ EDGES: servicios → PostgreSQL ============ -->
+        <mxCell id="e-auth-pg" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=1;" edge="1" parent="1" source="auth" target="postgres">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-nlb-nodeB" value="health check + traffic" style="endArrow=classic;html=1;rounded=0;fontSize=10;" edge="1" parent="1" source="d-nlb" target="d-nodeB">
+        <mxCell id="e-user-pg" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=1;" edge="1" parent="1" source="user" target="postgres">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-nodeA-pods" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="d-nodeA" target="d-podsA">
+        <mxCell id="e-group-pg" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=1;" edge="1" parent="1" source="group" target="postgres">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-nodeB-pods" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="d-nodeB" target="d-podsB">
+        <mxCell id="e-channel-pg" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=1;" edge="1" parent="1" source="channel" target="postgres">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-pods-ebs" value="PVC → mount" style="endArrow=classic;html=1;rounded=0;fontSize=10;" edge="1" parent="1" source="d-podsA" target="d-ebsA">
+        <mxCell id="e-direct-pg" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=1;" edge="1" parent="1" source="direct" target="postgres">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-cp-nodeA" value="kubelet ↔ API" style="endArrow=classic;startArrow=classic;html=1;rounded=0;fontSize=10;strokeColor=#9673a6;" edge="1" parent="1" source="d-cp" target="d-nodeA">
+        <mxCell id="e-file-pg" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=1;" edge="1" parent="1" source="file" target="postgres">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-cp-nodeB" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#9673a6;" edge="1" parent="1" source="d-cp" target="d-nodeB">
+
+        <!-- ============ EDGES: servicios → MongoDB ============ -->
+        <mxCell id="e-msg-mongo" style="endArrow=classic;html=1;strokeColor=#82b366;strokeWidth=1;" edge="1" parent="1" source="message" target="mongo">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-mac-cp" value="kubectl (HTTPS)" style="endArrow=classic;html=1;rounded=0;fontSize=10;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="d-mac" target="d-cp">
+        <mxCell id="e-del-mongo" style="endArrow=classic;html=1;strokeColor=#82b366;strokeWidth=1;" edge="1" parent="1" source="delivery" target="mongo">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-mac-ecr" value="docker push" style="endArrow=classic;html=1;rounded=0;fontSize=10;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="d-mac" target="d-ecr">
+
+        <!-- ============ EDGES: servicios → Redis ============ -->
+        <mxCell id="e-pres-redis" style="endArrow=classic;html=1;strokeColor=#b85450;strokeWidth=1;" edge="1" parent="1" source="presence" target="redis">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-ecr-nodes" value="image pull" style="endArrow=classic;html=1;rounded=0;fontSize=10;strokeColor=#d79b00;" edge="1" parent="1" source="d-ecr" target="d-nodeA">
+        <mxCell id="e-del-redis" style="endArrow=classic;html=1;strokeColor=#b85450;strokeWidth=1;" edge="1" parent="1" source="delivery" target="redis">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-iam-cp" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#b85450;dashed=1;" edge="1" parent="1" source="d-iam" target="d-cp">
+
+        <!-- ============ EDGES: servicios → S3 ============ -->
+        <mxCell id="e-file-s3" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=1;" edge="1" parent="1" source="file" target="s3">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d-e-iam-nodeA" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#b85450;dashed=1;" edge="1" parent="1" source="d-iam" target="d-nodeA">
+        <mxCell id="e-media-s3" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=1;" edge="1" parent="1" source="media" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ EDGES: Kafka publish (servicio → Kafka, punteada naranja) ============ -->
+        <mxCell id="k-ws-pub" value="messages.sent" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="wsgw" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-del-pub" value="messages.delivered / read" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="delivery" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-pres-pub" value="user.presence" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="presence" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-file-pub" value="files.uploaded" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="file" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-media-pub" value="media.ready" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="media" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-group-pub" value="group.member_changed" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="group" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ EDGES: Kafka consume (Kafka → servicio, punteada naranja) ============ -->
+        <mxCell id="k-msg-sub" value="sub: messages.sent" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;dashPattern=1 4;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="kafka" target="message">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-del-sub" value="sub: messages.sent" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;dashPattern=1 4;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="kafka" target="delivery">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-media-sub" value="sub: files.uploaded" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;dashPattern=1 4;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="kafka" target="media">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k-ws-sub" value="sub: delivered, read, presence, media.ready, member_changed" style="endArrow=classic;html=1;strokeColor=#D79B00;strokeWidth=2;dashed=1;dashPattern=1 4;fontColor=#D79B00;fontSize=10;" edge="1" parent="1" source="kafka" target="wsgw">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
